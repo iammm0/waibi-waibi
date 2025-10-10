@@ -1,66 +1,18 @@
-import Link from "next/link";
-import ChaosCanvas from "@/components/chaos-canvas";
 import EntryHero from "@/components/entry-hero";
-import MindDumpCard from "@/components/mind-dump-card";
-import ProjectCard from "@/components/project-card";
-import SectionHeader from "@/components/section-header";
-import { getMindDumpPreview } from "@/data/mind-dump";
-import { getProjectPreview } from "@/data/projects";
+import ChatWidget from "@/components/chat-widget";
 
 export default function HomePage() {
-  const mindPreviews = getMindDumpPreview().slice(0, 3);
-  const projectPreviews = getProjectPreview().slice(0, 3);
+    return (
+        <main className="flex flex-col items-center justify-center px-4 sm:px-8 space-y-20">
+            {/* 顶部 EntryHero：自适应高度、居中显示 */}
+            <section className="w-full max-w-5xl">
+                <EntryHero />
+            </section>
 
-  return (
-    <div className="space-y-16">
-      <EntryHero />
-
-      {/*<section>*/}
-      {/*  <SectionHeader*/}
-      {/*    title="Mind Dump"*/}
-      {/*    subtitle="精神溢出区：临时把脑内缓存导出，字句半真半假，但记忆是真的。"*/}
-      {/*    actions={*/}
-      {/*      <Link href="/mind-dump" className="badge glitch-hover">*/}
-      {/*        查看全部*/}
-      {/*      </Link>*/}
-      {/*    }*/}
-      {/*  />*/}
-      {/*  <div className="section-grid">*/}
-      {/*    {mindPreviews.map((entry) => (*/}
-      {/*      <MindDumpCard key={entry.slug} entry={entry} />*/}
-      {/*    ))}*/}
-      {/*  </div>*/}
-      {/*</section>*/}
-
-      {/*<section>*/}
-      {/*  <SectionHeader*/}
-      {/*    title="Projects"*/}
-      {/*    subtitle="狠活展示区：给异常堆栈一个舞台，顺便记下我和宇宙谈判的结果。"*/}
-      {/*    actions={*/}
-      {/*      <Link href="/projects" className="badge glitch-hover">*/}
-      {/*        查看全部*/}
-      {/*      </Link>*/}
-      {/*    }*/}
-      {/*  />*/}
-      {/*  <div className="section-grid">*/}
-      {/*    {projectPreviews.map((project) => (*/}
-      {/*      <ProjectCard key={project.slug} project={project} />*/}
-      {/*    ))}*/}
-      {/*  </div>*/}
-      {/*</section>*/}
-
-      {/*<section className="space-y-6">*/}
-      {/*  <SectionHeader*/}
-      {/*    title="Chaos Playground"*/}
-      {/*    subtitle="炫技实验室：短促但惊艳的故障光束，有降噪按钮，放心。"*/}
-      {/*    actions={*/}
-      {/*      <Link href="/chaos-playground" className="badge glitch-hover">*/}
-      {/*        进入实验室*/}
-      {/*      </Link>*/}
-      {/*    }*/}
-      {/*  />*/}
-      {/*  <ChaosCanvas reduced />*/}
-      {/*</section>*/}
-    </div>
-  );
+            {/* 聊天组件：有自己的容器宽度，不受上方挤压 */}
+            <section className="w-full max-w-3xl">
+                <ChatWidget />
+            </section>
+        </main>
+    );
 }

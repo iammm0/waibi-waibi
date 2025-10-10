@@ -7,11 +7,9 @@ import { useVibe } from "@/app/providers";
 import Logo from "./logo";
 
 const navItems = [
-  { href: "/", label: "首页" },
-  { href: "/mind-dump", label: "Mind Dump" },
-  { href: "/projects", label: "Projects" },
-  { href: "/mirror-room", label: "Mirror Room" },
-  { href: "/chaos-playground", label: "Chaos Playground" },
+  { href: "/", label: "发电面板" },
+  { href: "/mind-dump", label: "博客" },
+  { href: "/projects", label: "项目" },
 ];
 
 export default function Navigation() {

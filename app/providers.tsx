@@ -29,11 +29,6 @@ const VibeContext = createContext<VibeContextValue | undefined>(undefined);
 const MODE_KEY = "waibi-mode";
 const MOTION_KEY = "waibi-motion";
 
-// 语录仅在客户端渲染，避免影响 SSR 首帧一致性
-const QuoteTicker = dynamic(() => import("@/components/quote-ticker"), {
-  ssr: false,
-});
-
 export function useVibe() {
   const ctx = useContext(VibeContext);
   if (!ctx) throw new Error("useVibe must be used within <Providers>");
@@ -104,7 +99,6 @@ export default function Providers({
         <PageTransition />
         <div className="min-h-screen flex flex-col">
           <Navigation />
-          <QuoteTicker />
           <main className="flex-1" id="main-content">
             {children}
           </main>

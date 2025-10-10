@@ -16,29 +16,6 @@ export default function Footer() {
         <p className="pixel-text text-[0.6rem] uppercase tracking-[0.25em]">
           Waibi Waibi — 歪比巴布！
         </p>
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          <Link
-            className="underline-offset-4 hover:underline"
-            href="/mind-dump"
-          >
-            Mind Dump
-          </Link>
-          <Link className="underline-offset-4 hover:underline" href="/projects">
-            Projects
-          </Link>
-          <Link
-            className="underline-offset-4 hover:underline"
-            href="/mirror-room"
-          >
-            Mirror Room
-          </Link>
-          <Link
-            className="underline-offset-4 hover:underline"
-            href="/chaos-playground"
-          >
-            Chaos Playground
-          </Link>
-        </div>
       </div>
     </footer>
   );

@@ -1,3 +1,4 @@
+// data/projects.ts
 import { formatDate, slugify } from "@/lib/waibi";
 
 export type ProjectStatus = "alive" | "unstable" | "legend";
@@ -8,59 +9,86 @@ export interface ProjectEntry {
   elevator: string;
   tech: string[];
   status: ProjectStatus;
-  updatedAt: string;
+  updatedAt: string; // YYYY-MM-DD
   story: string;
   readme: string[];
   links: Array<{ label: string; href: string }>;
 }
 
+/**
+ * 固定置顶顺序：你提到的三个真实项目
+ * 会强制排在最前（依次：PhysicistsCard → GrowForever → OnePenny），
+ * 其它项目再按更新时间倒序。
+ */
+const PINNED_ORDER = ["PhysicistsCard", "GrowForever", "OnePenny"] as const;
+
+/* -------------------------------------------------------------------------- */
+/*                             你的真实项目清单                                 */
+/* -------------------------------------------------------------------------- */
+
 const baseProjects = [
   {
-    name: "Chrono-Glitch HUD",
-    elevator: "把正常流程拧到 37°歪。",
-    tech: ["Next.js", "WebGL", "TypeScript"],
+    name: "PhysicistsCard",
+    elevator: "把物理学家的名言做成像素风卡片，可一键生成社交图与贴纸。",
+    tech: ["Next.js", "TailwindCSS", "MDX", "OG Image", "Vercel Edge"],
     status: "alive",
-    updatedAt: "2024-12-05",
+    updatedAt: "2025-10-08",
     story:
-      "剧情感宣言：这是个故障感时间面板，用户在里面看到的不只是数据，还有“如果没有加班”版的时间线。",
+        "剧情感宣言：当海森堡遇到像素雨，确定性只剩下一张卡片。把物理学家的名言、头像与生平片段做成可收藏/分享的卡牌宇宙。",
     readme: [
-      "核心是一个可拖动的时间轴，左边是真实记录，右边是我脑补的平行宇宙。",
-      "使用 WebGL 渲染扫描线，同时保持 60fps —— 不然就不叫 HUD。",
-      "GitHub 元数据接口预留，后续会自动展示 Star 趋势。",
-    ],
-    links: [{ label: "设计脑洞", href: "https://example.com/chrono-glitch" }],
-  },
-  {
-    name: "Stacktrace Opera",
-    elevator: "给异常堆栈一个舞台。",
-    tech: ["Node.js", "Vite", "MDX"],
-    status: "unstable",
-    updatedAt: "2024-11-18",
-    story: "剧情感宣言：每一次后端哭泣，都被翻译成朗诵版的错误报告。",
-    readme: [
-      "将错误堆栈按剧本格式排版，左右声道分别朗读调用栈和变量状态。",
-      "可以导出为播客片段，用来教育未来的自己。",
-      "预留远端语音合成接口，待宇宙批准。",
+      "卡面由 MDX 驱动，支持主题与动态布局（像素风 / 网格风）。",
+      "内置 OG Image 生成：分享即图，不靠截图。",
+      "计划接 GitHub Issues 作“语录收集池”，自动生成 PR 填充卡片库。",
+      "提供导出 PNG / WebP 按需放大，移动端长按直存。",
     ],
     links: [
-      { label: "原型截图", href: "https://example.com/stacktrace-opera" },
+      { label: "Demo（占位）", href: "https://example.com/physicists-card" },
+      { label: "Repo（占位）", href: "https://github.com/yourname/PhysicistsCard" },
+      { label: "设计记录（占位）", href: "https://example.com/notes/physicists-card" },
     ],
   },
   {
-    name: "Entropy Atlas",
-    elevator: "在部署面前练级的勇者地图。",
-    tech: ["Astro", "D3.js", "Cloudflare"],
-    status: "legend",
-    updatedAt: "2024-08-01",
-    story: "剧情感宣言：把历史上失败的上线画成星座，方便在下次发布前占卜。",
+    name: "GrowForever",
+    elevator: "自养型数字花园：内容像藤蔓一样互相长出关联与可视化。",
+    tech: ["Next.js", "MDX", "Graph 可视化", "D3.js", "SQLite/Drizzle"],
+    status: "unstable",
+    updatedAt: "2025-09-22",
+    story:
+        "剧情感宣言：博客不是时间线，而是生态位。让文章彼此结种、发芽、缠绕，生成“阅读路线”和“灵感蔓延图”。",
     readme: [
-      "读取 CI/CD 日志，自动生成失败星座图。",
-      "每个节点都能展开，展示当时的 commit、负责人和最后的自嘲语录。",
-      "有个隐藏开关，按下去可以切换到“理智视图”，只看 KPI。",
+      "MDX Frontmatter 建模“养分”（tags、mood、seed）以驱动推荐。",
+      "用 D3.js 画出“灵感图谱”，点节点跳到相邻文章。",
+      "计划引入“歪比指数”作为内容能量条，决定首页出现权重。",
+      "离线优先（IndexedDB 缓存），弱网也能逛。",
     ],
-    links: [{ label: "星座展示", href: "https://example.com/entropy-atlas" }],
+    links: [
+      { label: "Demo（占位）", href: "https://example.com/grow-forever" },
+      { label: "Repo（占位）", href: "https://github.com/yourname/GrowForever" },
+    ],
+  },
+  {
+    name: "OnePenny",
+    elevator: "一分钱实验：最小可行的支付闭环与 A/B 计费试验场。",
+    tech: ["Next.js", "Stripe", "Cloudflare Workers", "Postgres/Prisma"],
+    status: "legend",
+    updatedAt: "2025-07-30",
+    story:
+        "剧情感宣言：如果价值只需一分钱证明，那我用最短链路把“点子→付款→回执”走完整。更多是对商业闭环的戏剧化演练。",
+    readme: [
+      "一键创建结算链接，回调落库并生成可验证的收据页。",
+      "A/B 实验：定价与话术实时切换，埋点统计转化差异。",
+      "Workers 充当签名/校验边缘层，降低延迟，提高容错。",
+      "预留 Webhook 仿真：本地也能全链路跑通。",
+    ],
+    links: [
+      { label: "Demo（占位）", href: "https://example.com/one-penny" },
+      { label: "Repo（占位）", href: "https://github.com/yourname/OnePenny" },
+      { label: "结算回执样例（占位）", href: "https://example.com/one-penny/receipt" },
+    ],
   },
 ] as const satisfies Omit<ProjectEntry, "slug">[];
+
+/* -------------------------------------------------------------------------- */
 
 export const projectEntries: ProjectEntry[] = baseProjects.map((project) => ({
   ...project,
@@ -73,13 +101,20 @@ export function getProjectBySlug(slug: string) {
 
 export function getProjectPreview() {
   return projectEntries
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
-    )
-    .map((project) => ({
-      ...project,
-      formattedDate: formatDate(project.updatedAt),
-    }));
+      .slice()
+      .sort((a, b) => {
+        // 置顶优先：PhysicistsCard → GrowForever → OnePenny
+        const ai = PINNED_ORDER.indexOf(a.name as (typeof PINNED_ORDER)[number]);
+        const bi = PINNED_ORDER.indexOf(b.name as (typeof PINNED_ORDER)[number]);
+        const ap = ai === -1 ? Number.POSITIVE_INFINITY : ai;
+        const bp = bi === -1 ? Number.POSITIVE_INFINITY : bi;
+        if (ap !== bp) return ap - bp;
+
+        // 其余按更新时间倒序
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      })
+      .map((project) => ({
+        ...project,
+        formattedDate: formatDate(project.updatedAt),
+      }));
 }
