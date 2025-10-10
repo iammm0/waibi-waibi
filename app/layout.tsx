@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Noto_Sans_SC, Press_Start_2P as PressStart2P } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import "@fontsource/noto-sans-sc/400.css";
