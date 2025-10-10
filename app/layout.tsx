@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Noto_Sans_SC, Press_Start_2P } from "next/font/google";
+import { Noto_Sans_SC, Press_Start_2P as PressStart2P } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 
-const pixel = Press_Start_2P({
+const pixel = PressStart2P({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-pixel",
