@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import {getPersonaPrompt} from "@/lib/persona";
 
-const UPSTREAM_URL = process.env.LLM_BASE_URL ?? "https://api.openai.com/v1/chat/completions"; // ← 改成你的服务地址
-const API_KEY = process.env.LLM_API_KEY ?? ""; // ← 在 .env 里配置
-const MODEL = process.env.LLM_MODEL ?? "gpt-4o-mini"; // ← 改成你购买的型号
+const UPSTREAM_URL = process.env.LLM_BASE_URL ?? "https://jeniya.cn/v1/chat/completions";
+const API_KEY = process.env.LLM_API_KEY ?? "sk-i6nNLAKBAVe84cBjPS0YOKUi0KjlCSnkB5IDtXyratNejonb";
+const MODEL = process.env.LLM_MODEL ?? "gpt-4o-mini";
 
 export async function POST(req: NextRequest) {
     if (!API_KEY) {

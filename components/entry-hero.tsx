@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useVibe } from "@/app/providers";
 
 const INTRO_SENTENCES = [
-  "You！Son of Bitches！",
+  "You！Son of a bitches！",
   "歪比歪比！歪比巴布！",
   "欢迎来到我的脑壳里。",
     "Nice!",

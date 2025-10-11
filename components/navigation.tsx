@@ -14,7 +14,7 @@ const navItems = [
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { mode, motion, toggleMode, toggleMotion } = useVibe();
+  const { mode, toggleMode } = useVibe();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -75,19 +75,6 @@ export default function Navigation() {
               >
               <span className="pixel-text text-[0.65rem]" suppressHydrationWarning>
                 {mode === "waibi" ? "切回理智" : "启用歪比"}
-              </span>
-              </button>
-
-              <button
-                  type="button"
-                  onClick={toggleMotion}
-                  className="badge glitch-hover"
-                  aria-pressed={motion === "wild"}
-                  aria-label="切换动效强度"
-                  suppressHydrationWarning
-              >
-              <span className="pixel-text text-[0.65rem]" suppressHydrationWarning>
-                {motion === "wild" ? "冷静开关" : "恢复抖动"}
               </span>
               </button>
             </div>
