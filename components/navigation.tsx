@@ -7,7 +7,7 @@ import { useVibe } from "@/app/providers";
 import Logo from "./logo";
 
 const navItems = [
-  { href: "/", label: "发电面板" },
+  { href: "/", label: "发电留言板" },
   { href: "/mind-dump", label: "博客" },
   { href: "/projects", label: "项目" },
 ];

@@ -12,7 +12,6 @@ import Navigation from "@/components/navigation";
 import NoiseLayer from "@/components/noise-layer";
 import PageTransition from "@/components/page-transition";
 import Footer from "@/components/site-footer";
-import dynamic from "next/dynamic";
 
 type VibeMode = "waibi" | "rational";
 type MotionLevel = "wild" | "calm";
