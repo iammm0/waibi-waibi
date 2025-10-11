@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
-import { cookies } from "next/headers";
+import React from "react";
 
 export const metadata: Metadata = {
     title: "Waibi Waibi — 半疯半神的宇宙废料场",
@@ -15,18 +15,16 @@ export const metadata: Metadata = {
     },
 };
 
-export default async function RootLayout({
-                                             children,
-                                         }: Readonly<{ children: React.ReactNode }>) {
-    const cs = await cookies();
-    const cookieMode = cs.get("waibi-mode")?.value === "waibi" ? "waibi" : "rational";
-    const cookieMotion = cs.get("waibi-motion")?.value === "calm" ? "calm" : "wild";
-
+export default function RootLayout({
+                                       children,
+                                   }: {
+    children: React.ReactNode;
+}) {
+    // ✅ 不再使用 cookies()，直接传默认值
     return (
-        <html lang="zh-CN" suppressHydrationWarning data-mode={cookieMode} data-motion={cookieMotion}>
-        {/* 使用本地字体变量 */}
+        <html lang="zh-CN" suppressHydrationWarning data-mode="rational" data-motion="wild">
         <body className="font-sans" style={{ fontFamily: "var(--pixel-font), sans-serif" }}>
-        <Providers initialMode={cookieMode} initialMotion={cookieMotion}>
+        <Providers initialMode="rational" initialMotion="wild">
             {children}
         </Providers>
         </body>
