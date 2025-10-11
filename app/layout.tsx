@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     title: "Waibi Waibi — 半疯半神的宇宙废料场",
     description:
         "Waibi Waibi 是一个半疯半神的个人宇宙，荒诞与理性并存，记录项目、心流、实验与歪语录。",
-    metadataBase: new URL("https://waibi-waibi.local"),
+    metadataBase: new URL("https://waibi.physicistscard.com"),
     openGraph: {
         title: "Waibi Waibi | Where chaos meets creation",
         description:
