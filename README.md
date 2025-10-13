@@ -1,4 +1,4 @@
-# 🌀 歪比歪比宇宙使用手册
+# 歪比宇宙使用手册
 
 > README.md 还能这么写？
 
@@ -13,7 +13,7 @@
 ```
 npm run dev
 ```
-> 若成功，控制台会发出“ready - started server on url: http://localhost:3000
+> 若成功: http://localhost:3000
 
 ## 0x02 · 组件花名册
 ```.dotenv
