@@ -4,14 +4,14 @@ import Providers from "./providers";
 import React from "react";
 
 export const metadata: Metadata = {
-    title: "Waibi Waibi — 半疯半神的宇宙废料场",
+    title: "Waibi 宇宙",
     description:
-        "Waibi Waibi 是一个半疯半神的个人宇宙，荒诞与理性并存，记录项目、心流、实验与歪语录。",
+        "在 Waibi 宇宙里，你可以与赵明俊的意识体交流。",
     metadataBase: new URL("https://waibi.physicistscard.com"),
     openGraph: {
-        title: "Waibi Waibi | Where chaos meets creation",
+        title: "Waibi Waibi | Waibi Babu",
         description:
-            "半疯半神的混沌日志，Mind Dump、Projects、Mirror Room 与 Chaos Playground 在此集合。",
+            "在留言板里查看我的 Waibi 语录，在聊一聊里与我的意识体交流！",
     },
 };
 
