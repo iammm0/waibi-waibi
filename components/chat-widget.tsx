@@ -237,7 +237,11 @@ export default function ChatWidget() {
             {/* 输入区 */}
             <form onSubmit={sendMessage} className="flex items-center gap-2">
                 <input
-                    className="flex-1 rounded-md border border-current/30 bg-transparent px-3 py-2 text-sm"
+                    className="flex-1 rounded-md bg-transparent px-3 py-2 text-sm
+                    text-[var(--fg-waibi)] border border-[var(--accent-cyan)]
+             shadow-[0_0_10px_hsl(var(--accent-cyan)/0.35)] transition-all duration-300
+             [data-mode='rational']:bg-[var(--bg-rational)] [data-mode='rational']:text-[var(--fg-rational)]
+                    "
                     placeholder='有什么想跟赵明俊的聊的吗？'
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -246,7 +250,14 @@ export default function ChatWidget() {
                 <button
                     type="submit"
                     disabled={loading || !input.trim()}
-                    className="badge glitch-hover"
+                    className="
+                    relative px-5 py-2 rounded-md text-sm font-semibold
+      bg-gradient-to-r from-[var(--accent-cyan)] via-[var(--accent-purple)] to-[var(--accent-green)]
+      hover:brightness-110 disabled:opacity-50 transition-all duration-300
+      shadow-[0_0_10px_hsl(var(--accent-cyan)/0.55)] before:absolute before:inset-0 before:rounded-md
+      before:border before:border-[var(--accent-cyan)]/60 before:animate-pulse
+      dark:bg-gradient-to-r dark:from-[var(--accent-purple)] dark:via-[var(--accent-cyan)] dark:to-[var(--accent-green)]
+                    "
                     aria-disabled={loading || !input.trim()}
                 >
                     发送
