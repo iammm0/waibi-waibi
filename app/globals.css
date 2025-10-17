@@ -25,7 +25,6 @@
 }
 
 
-
 /* ==================== 字体加载优化 ==================== */
 @font-face {
   font-family: 'Press Start 2P';               /* 定义字体名称 */
@@ -38,33 +37,6 @@
   font-family: 'ZCOOLXiaoWei';                /* 定义中文字体 */
   src: url('/fonts/ZCOOLXiaoWei-Regular.ttf') format('truetype'); /* 引入中文字体文件 */
   font-display: swap;                         /* 字体加载时，使用系统字体直到字体加载完成 */
-}
-
-
-
-body {
-  font-family: 'Press Start 2P', sans-serif; /* 默认英文字体 */
-}
-
-body:lang(zh) {
-  font-family: 'ZCOOLXiaoWei', sans-serif; /* 如果是中文文本，则使用中文字体 */
-}
-
-
-
-body {
-  margin: 0;                             /* 去除页面默认边距 */
-  min-height: 100vh;                     /* 设置页面最小高度为 100% 视口高度 */
-  font-family: var(--body-font), fangsong; /* 全局使用中文字体，英文字体为后备 */
-  background-color: inherit;             /* 背景色继承 */
-  color: inherit;                        /* 文字颜色继承 */
-
-  /* 外壁模式背景渐变 */
-  html[data-mode="waibi"] & {
-    background-image:
-            radial-gradient(circle at 20% 20%, rgba(21, 243, 255, 0.12), transparent 45%),
-            radial-gradient(circle at 80% 0%, rgba(177, 121, 255, 0.08), transparent 40%);
-  }
 }
 
 
@@ -83,8 +55,30 @@ html {
   }
 }
 
+body {
+  font-family: var(--body-font), sans-serif; /* 默认字体栈，中文字体优先，英文字体为后备 */
+  margin: 0;                             /* 去除页面默认边距 */
+  min-height: 100vh;                     /* 设置页面最小高度为 100% 视口高度 */
+  background-color: inherit;             /* 背景色继承 */
+  color: inherit;                        /* 文字颜色继承 */
+  font-family: var(--body-font), fangsong; /* 全局使用中文字体，英文字体为后备 */
+}
 
+body:lang(zh) {
+  font-family: var(--font-sans-cn), var(--pixel-font), sans-serif; /* 中文字体优先 */
+}
 
+body:lang(en) {
+  font-family: var(--pixel-font), sans-serif; /* 英文字体优先 */
+}
+
+html[data-mode="waibi"] & {
+  background-image:
+          radial-gradient(circle at 20% 20%, rgba(21, 243, 255, 0.12), transparent 45%),
+          radial-gradient(circle at 80% 0%, rgba(177, 121, 255, 0.08), transparent 40%);
+}
+
+/* ==================== 字体设置优化 ==================== */
 * {
   box-sizing: border-box; /* 包括 padding 和 border 在内的总宽度和高度计算方式 */
 }
@@ -105,7 +99,6 @@ button {
 }
 
 
-
 /* ==================== 布局优化 ==================== */
 main {
   width: min(94vw);
@@ -117,7 +110,6 @@ main {
     padding-block: 2.5rem;
   }
 }
-
 
 
 /* ==================== 文本样式优化 ==================== */
@@ -136,7 +128,6 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--fg-rational); /* 理性模式下使用前景色 */
   }
 }
-
 
 
 /* ==================== 动画效果优化 ==================== */
@@ -162,7 +153,6 @@ html[data-motion="wild"] .entry-hero {
 }
 
 
-
 /* 页面过渡 */
 .page-transitioning main {
   animation: page-blip 260ms ease-in;
@@ -173,8 +163,6 @@ html[data-motion="wild"] .entry-hero {
   50% { opacity: 1; transform: translateY(-2px) scaleX(0.99); }
   100% { opacity: 1; transform: none; }
 }
-
-
 
 
 /* ==================== 视觉效果优化 ==================== */
@@ -199,7 +187,6 @@ html[data-motion="wild"] .entry-hero {
 }
 
 
-
 /* CRT滤镜 */
 .crt-filter {
   position: relative;
@@ -221,6 +208,28 @@ html[data-motion="wild"] .entry-hero {
   html[data-motion="calm"] &::after { opacity: 0.1; }
 }
 
+/* 打字机效果 */
+@keyframes typing {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: typing 3s steps(30) 1s forwards, blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  50% {
+    border-color: transparent;
+  }
+}
 
 
 /* ==================== 动画降级处理 ==================== */
