@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useVibe } from "@/app/providers";
 import Logo from "./logo";
+import {FaMoon, FaSun} from "react-icons/fa";
 
 const navItems = [
   { href: "/", label: "发电留言板" },
@@ -13,7 +14,7 @@ const navItems = [
 
 // 随机打乱文本的函数
 function scrambleText(target: string, progress: number) {
-  const glyphs = "█▚▞▛ΔΩ✶☄"; // 乱码字符池
+  const glyphs = "█▚▞▛ΔΩ✶☄";
   return target
       .split("")
       .map((char, index) => {
@@ -39,13 +40,7 @@ export default function Navigation() {
       mode === "waibi"
           ? "bg-black/60 text-white border-white/10"
           : "bg-white/80 text-black border-black/10";
-
-  const mobileTone =
-      mode === "waibi"
-          ? "bg-black/70 border-white/10"
-          : "bg-white/90 border-black/10";
-
-  // 动态设置文字的乱码效果
+// 动态设置文字的乱码效果
   const [activeIndex, setActiveIndex] = useState<string | null>(null);
 
   const handleScramble = (href: string) => {
@@ -98,18 +93,27 @@ export default function Navigation() {
               })}
             </ul>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
                   type="button"
                   onClick={toggleMode}
-                  className="badge glitch-hover"
+                  className="badge glitch-hover flex items-center gap-2"
                   aria-pressed={mode === "waibi"}
                   aria-label="切换歪比/理智模式"
                   suppressHydrationWarning
               >
-                        <span className="pixel-text text-[0.65rem]" suppressHydrationWarning>
-                            {mode === "waibi" ? "切回理智" : "启用歪比"}
-                        </span>
+                {/* 图标和文字结合 */}
+                {mode === "waibi" ? (
+                    <>
+                      <span className="pixel-text text-[0.65rem]">切回理智</span>
+                      <FaSun className="text-l" /> {/* 月亮图标 */}
+                    </>
+                ) : (
+                    <>
+                      <span className="pixel-text text-[0.65rem]">启用歪比</span>
+                      <FaMoon className="text-l" /> {/* 太阳图标 */}
+                    </>
+                )}
               </button>
             </div>
           </nav>
@@ -117,26 +121,21 @@ export default function Navigation() {
 
         {mounted && (
             <div className="md:hidden">
-              <nav
-                  className={`border-t px-6 py-3 text-xs transition-colors ${mobileTone}`}
-                  suppressHydrationWarning
-              >
-                <ul className="grid grid-cols-2 gap-2">
+              <nav className="flex items-center gap-3 text-xs sm:text-sm">
+                <ul className="hidden items-center gap-3 md:flex">
                   {navItems.map((item) => {
-                    const active = pathname === item.href;
+                    const active = pathname === item.href || activeIndex === item.href;
+                    const text = mounted ? scrambleText(item.label, progress) : item.label; // 确保只有在客户端渲染后才触发打乱文本
                     return (
                         <li key={item.href}>
                           <Link
                               href={item.href}
-                              className={`glitch-hover block rounded-md border px-3 py-2 text-center font-semibold transition ${
-                                  active
-                                      ? "border-[var(--accent-cyan)] text-[var(--accent-cyan)]"
-                                      : "border-current/30 opacity-80 hover:opacity-100"
-                              }`}
+                              className={`glitch-hover relative px-2 py-1 font-semibold transition-opacity ${active ? "text-[var(--accent-cyan)]" : "opacity-70 hover:opacity-100"}`}
+                              aria-current={active ? "page" : undefined}
+                              onMouseEnter={() => handleScramble(item.href)}
                           >
-                                        <span className="pixel-text text-[0.6rem]">
-                                            {item.label}
-                                        </span>
+                            <span className="pixel-text">{text}</span>
+                            {active && " ✦"} {/* 显示选中的星星 */}
                           </Link>
                         </li>
                     );
