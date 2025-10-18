@@ -20,11 +20,10 @@ export default function RootLayout({
                                    }: {
     children: React.ReactNode;
 }) {
-    // ✅ 不再使用 cookies()，直接传默认值
     return (
-        <html lang="zh-CN" suppressHydrationWarning data-mode="rational" data-motion="wild">
-        <body className="font-sans" style={{ fontFamily: "var(--pixel-font), sans-serif" }}>
-        <Providers initialMode="rational" initialMotion="wild">
+        <html lang="zh-CN" suppressHydrationWarning data-mode="rational">
+        <body className="font-sans">
+        <Providers initialMode="rational">
             {children}
         </Providers>
         </body>
