@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 // 中文与英文目标序列（逐位对应）
-const CN_TARGET = ["歪", "比", "巴", "布"];
-const EN_TARGET = ["W", "A", "I", "B"];
+const CN_TARGET = ["歪", "比", "巴", "布"]; // 修改为“歪比巴布伊”以适应中文
+const EN_TARGET = ["W", "a", "i", "b", "i"];  // 修改为 “Waibi”
 
 // 混乱符号池
-const GLYPHS = ["歪", "比", "巴", "布", "W", "A", "I", "B", "Ω", "Δ", "✶", "☄", "Ψ", "Φ", "∇", "☆"];
+const GLYPHS = ["歪", "比", "巴", "布", "W", "a", "i", "b", "i","Ω", "Δ", "✶", "☄", "Ψ", "Φ", "∇", "☆"];
 
 const SCRAMBLE_INTERVAL_MS = 60;   // 每帧间隔
 const SCRAMBLE_DURATION_MS = 600;  // 每次乱码持续时间
@@ -71,15 +71,15 @@ export default function Logo() {
                     aria-hidden
                     className="inline-flex gap-1 transition-all group-hover:text-[var(--accent-purple)]"
                 >
-          {chars.map((c, i) => (
-              <span
-                  key={i}
-                  className="inline-block transition-transform duration-150 group-hover:-translate-y-[2px]"
-              >
-              {c}
-            </span>
-          ))}
-        </span>
+                    {chars.map((c, i) => (
+                        <span
+                            key={i}
+                            className="inline-block transition-transform duration-150 group-hover:-translate-y-[2px]"
+                        >
+                            {c}
+                        </span>
+                    ))}
+                </span>
             </div>
         </Link>
     );
