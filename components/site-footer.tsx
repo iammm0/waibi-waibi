@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useVibe } from "@/app/providers";
 
 export default function Footer() {
