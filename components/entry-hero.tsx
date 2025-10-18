@@ -53,7 +53,7 @@ export default function EntryHero() {
     // 设置字体为自定义英文字体
     return (
         <section>
-            <p className="text-2xl font-[Press Start 2P]">
+            <p className="text-2xl font-CyberGame">
                 {text}
             </p>
         </section>
