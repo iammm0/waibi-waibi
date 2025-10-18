@@ -3,7 +3,7 @@ import {getPersonaPrompt} from "@/lib/persona";
 
 const UPSTREAM_URL = process.env.LLM_BASE_URL ?? "https://jeniya.cn/v1/chat/completions";
 const API_KEY = process.env.LLM_API_KEY ?? "sk-i6nNLAKBAVe84cBjPS0YOKUi0KjlCSnkB5IDtXyratNejonb";
-const MODEL = process.env.LLM_MODEL ?? "gpt-4o-mini";
+const MODEL = process.env.LLM_MODEL ?? "gpt-4o";
 
 export async function POST(req: NextRequest) {
     if (!API_KEY) {
