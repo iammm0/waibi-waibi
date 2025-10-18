@@ -21,9 +21,9 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="zh-CN" suppressHydrationWarning data-mode="rational">
-        <body className="font-sans">
-        <Providers initialMode="rational">
+        <html lang="zh-CN" suppressHydrationWarning data-mode="waibi">
+        <body>
+        <Providers initialMode="waibi">
             {children}
         </Providers>
         </body>
