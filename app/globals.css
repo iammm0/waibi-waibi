@@ -24,7 +24,6 @@
   color-scheme: dark light;   /* 设置支持的颜色模式：暗黑和明亮 */
 }
 
-
 /* ==================== 字体加载优化 ==================== */
 @font-face {
   font-family: 'Press Start 2P';               /* 定义字体名称 */
@@ -39,6 +38,10 @@
   font-display: swap;                         /* 字体加载时，使用系统字体直到字体加载完成 */
 }
 
+
+.font-CyberGame {
+  font-family: 'Press Start 2P', sans-serif;
+}
 
 
 /* ==================== 全局样式优化 ==================== */
