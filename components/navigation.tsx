@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useVibe } from "@/app/providers";
 import Logo from "./logo";
-import {FaMoon, FaSun} from "react-icons/fa";
+import { FaMoon, FaSun } from "react-icons/fa";
+import Link from "next/link";
 
 const navItems = [
   { href: "/", label: "发电留言板" },
@@ -30,18 +30,11 @@ export default function Navigation() {
   const { mode, toggleMode } = useVibe();
   const [mounted, setMounted] = useState(false);
   const [progress, setProgress] = useState(0); // 进度状态，用于控制恢复动画
+  const [activeIndex, setActiveIndex] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // 确保组件只在客户端渲染
   }, []);
-
-  // 根据模式设置 header 和 mobile 的样式
-  const headerTone =
-      mode === "waibi"
-          ? "bg-black/60 text-white border-white/10"
-          : "bg-white/80 text-black border-black/10";
-// 动态设置文字的乱码效果
-  const [activeIndex, setActiveIndex] = useState<string | null>(null);
 
   const handleScramble = (href: string) => {
     if (activeIndex === href) return; // 如果已经是选中状态，避免重复触发
@@ -58,6 +51,11 @@ export default function Navigation() {
     }, 50); // 50ms更新一次进度
   };
 
+  const headerTone =
+      mode === "waibi"
+          ? "bg-black/60 text-white border-white/10"
+          : "bg-white/80 text-black border-black/10";
+
   return (
       <header
           className={`sticky top-0 z-20 backdrop-blur border-b transition-colors ${headerTone}`}
@@ -68,31 +66,30 @@ export default function Navigation() {
             <Logo />
           </div>
 
-          <nav className="flex items-center gap-3 text-xs sm:text-sm">
-            <ul className="hidden items-center gap-3 md:flex">
+          <nav className="flex items-center gap-3 text-xs sm:text-sm w-full md:w-auto">
+            <ul className="flex w-full items-center justify-center gap-3 md:flex-row md:gap-3">
               {navItems.map((item) => {
                 const active = pathname === item.href || activeIndex === item.href;
-                const text = active ? scrambleText(item.label, progress) : item.label; // 激活时打乱文字
+                const text = active && mounted ? scrambleText(item.label, progress) : item.label; // 激活时打乱文字，确保客户端渲染时执行
                 return (
                     <li key={item.href}>
                       <Link
                           href={item.href}
                           className={`glitch-hover relative px-2 py-1 font-semibold transition-opacity ${
-                              active
-                                  ? "text-[var(--accent-cyan)]" // 选中时变为绿色
-                                  : "opacity-70 hover:opacity-100"
+                              active ? "text-[var(--accent-cyan)]" : "opacity-70 hover:opacity-100"
                           }`}
                           aria-current={active ? "page" : undefined}
                           onMouseEnter={() => handleScramble(item.href)}
                       >
                         <span className="pixel-text">{text}</span>
-                        {active && " ✦"} {/* 在选中时显示星星 */}
+                        {active && " ✦"} {/* 显示选中的星星 */}
                       </Link>
                     </li>
                 );
               })}
             </ul>
 
+            {/* 主题切换按钮 */}
             <div className="flex items-center gap-1">
               <button
                   type="button"
@@ -102,48 +99,21 @@ export default function Navigation() {
                   aria-label="切换歪比/理智模式"
                   suppressHydrationWarning
               >
-                {/* 图标和文字结合 */}
                 {mode === "waibi" ? (
                     <>
                       <span className="pixel-text text-[0.65rem]">切回理智</span>
-                      <FaSun className="text-l" /> {/* 月亮图标 */}
+                      <FaSun className="text-l" />
                     </>
                 ) : (
                     <>
                       <span className="pixel-text text-[0.65rem]">启用歪比</span>
-                      <FaMoon className="text-l" /> {/* 太阳图标 */}
+                      <FaMoon className="text-l" />
                     </>
                 )}
               </button>
             </div>
           </nav>
         </div>
-
-        {mounted && (
-            <div className="md:hidden">
-              <nav className="flex items-center gap-3 text-xs sm:text-sm">
-                <ul className="hidden items-center gap-3 md:flex">
-                  {navItems.map((item) => {
-                    const active = pathname === item.href || activeIndex === item.href;
-                    const text = mounted ? scrambleText(item.label, progress) : item.label; // 确保只有在客户端渲染后才触发打乱文本
-                    return (
-                        <li key={item.href}>
-                          <Link
-                              href={item.href}
-                              className={`glitch-hover relative px-2 py-1 font-semibold transition-opacity ${active ? "text-[var(--accent-cyan)]" : "opacity-70 hover:opacity-100"}`}
-                              aria-current={active ? "page" : undefined}
-                              onMouseEnter={() => handleScramble(item.href)}
-                          >
-                            <span className="pixel-text">{text}</span>
-                            {active && " ✦"} {/* 显示选中的星星 */}
-                          </Link>
-                        </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-            </div>
-        )}
       </header>
   );
 }
