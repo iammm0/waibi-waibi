@@ -197,7 +197,7 @@ export default function ChatWidget() {
                                         : "text-[var(--accent-purple)]"
                                 }`}
                             >
-                                {m.role === "user" ? "你" : "赵明俊"}
+                                {m.role === "user" ? "你" : "神秘人"}
                             </div>
                             <div className="whitespace-pre-wrap">{m.content}</div>
                         </div>
@@ -205,7 +205,7 @@ export default function ChatWidget() {
                 {loading && (
                     <div className="flex items-center justify-center space-x-2">
                         <FaSpinner className="animate-spin text-green-500" size={24} />
-                        <span>赵明俊正在考虑怎么好好说话……</span>
+                        <span>神秘人正在考虑怎么好好说话……</span>
                     </div>
                 )}
                 <div ref={bottomRef} />
@@ -243,7 +243,7 @@ export default function ChatWidget() {
                 className="flex items-center gap-2 w-full">
                 <input
                     className="flex-1 rounded-md border border-current/30 bg-transparent px-1 py-2 text-sm"
-                    placeholder='有什么想跟赵明俊的聊的吗？'
+                    placeholder='有什么想跟神秘人的聊的吗？'
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     disabled={loading}

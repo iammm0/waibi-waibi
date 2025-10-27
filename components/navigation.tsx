@@ -10,7 +10,7 @@ import Link from "next/link";
 const navItems = [
   { href: "/", label: "发电留言板" },
   { href: "/chat", label: "聊一聊" },
-  { href: "/mbti", label: "人格模拟" },
+  { href: "/mbti", label: "训练" },
 ];
 
 // 随机打乱文本

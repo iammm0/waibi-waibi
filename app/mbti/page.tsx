@@ -33,11 +33,11 @@ export default function MbtiPage() {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-3xl font-bold text-center mb-8">选择你的人格类型</h1>
+            <h1 className="text-3xl font-bold text-center mb-8">选择你的人格类型以训练</h1>
 
             {/* NT组 */}
             <h2 className="text-2xl font-semibold text-center mb-6">NT 组</h2>
-            <div className="flex flex-wrap justify-center gap-6 mb-12">
+            <div className="flex flex-wrap justify-center gap-6 mb-6">
                 {ntGroup.map((type) => (
                     <PersonalityCard key={type.id} {...type} containOnMobile focus="top" />
                 ))}

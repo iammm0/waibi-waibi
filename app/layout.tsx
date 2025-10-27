@@ -6,7 +6,7 @@ import React from "react";
 export const metadata: Metadata = {
     title: "Waibi 宇宙",
     description:
-        "在 Waibi 宇宙里，你可以与赵明俊的意识体交流。",
+        "在 Waibi 宇宙里，你可以与一位神秘人的意识体交流。",
     metadataBase: new URL("https://waibi.physicistscard.com"),
     openGraph: {
         title: "Waibi Waibi | Waibi Babu",

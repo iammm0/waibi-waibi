@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'json2csv'; // 导入 json2csv 的 parse 函数
-import { connectToDatabase } from '@/lib/mongodb'; // 导入 MongoDB 连接
 import User from '@/model/User';  // 引入用户模型
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,9 +7,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'GET') {  // 处理 GET 请求
         try {
-            // 确保连接数据库
-            await connectToDatabase();
-
             // 查找用户的训练数据
             const user = await User.findOne({ userId });
             if (!user) {
