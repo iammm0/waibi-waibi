@@ -45,7 +45,17 @@ export default function Providers({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      document.documentElement.dataset.mode = mode;
+      const html = document.documentElement;
+      html.dataset.mode = mode;
+      // 将 Tailwind 的 dark 变体与自定义模式联动
+      if (mode === "waibi") {
+        html.classList.add("dark");
+        // 提示浏览器配色方案，改善表单控件/滚动条等系统色
+        html.style.colorScheme = "dark";
+      } else {
+        html.classList.remove("dark");
+        html.style.colorScheme = "light";
+      }
       localStorage.setItem(MODE_KEY, mode);
     }
   }, [mode]);

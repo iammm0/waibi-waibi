@@ -19,12 +19,14 @@ RUN npm ci
 # ======================
 # 第二阶段：构建 Next.js 应用
 # ======================
-FROM node:22 AS builder
+FROM docker.io/library/node:22 AS builder
 WORKDIR /app
 
 # 从 deps 阶段拷贝 node_modules（已包含所有依赖，包括 dev）
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# 关闭 Next 遥测
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 构建 Next.js 应用（使用默认的 Webpack，不是 Turbopack）
 RUN npm run build
@@ -32,18 +34,19 @@ RUN npm run build
 # ======================
 # 第三阶段：运行时镜像（可选，用于部署）
 # ======================
-FROM node:22 AS runner
+FROM docker.io/library/node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=3000
 
 # 只拷贝必要的运行时文件
-COPY package.json ./
-COPY .env.local ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
+# 使用 Next.js standalone 输出，体积更小、启动更快
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./
+# 拷贝环境变量文件（若存在），用于运行期配置，如 MONGODB_URI 等
+COPY --from=builder /app/.env.local ./.env.local
 
 # 暴露端口 & 启动命令
 EXPOSE 3000
-CMD ["npx", "next", "start", "--hostname", "0.0.0.0", "-p", "3000"]
+CMD ["node", "server.js"]

@@ -14,7 +14,7 @@ function getPersonaApiKey(code: string) {
   return process.env[`LLM_API_KEY_${upper}`] || DEFAULT_API_KEY;
 }
 
-export async function POST(req: NextRequest, { params }: { params: { code: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ code: string }> }) {
   const auth = req.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   const payload = token ? verifyAccessToken(token) : null;
@@ -25,7 +25,8 @@ export async function POST(req: NextRequest, { params }: { params: { code: strin
   const modelFromClient = body?.model as string | undefined; // 可选模型名，由客户端指定
   if (!message || typeof message !== 'string') return NextResponse.json({ message: '缺少消息内容' }, { status: 400 });
 
-  const code = params.code.toLowerCase();
+  const { code: rawCode } = await context.params;
+  const code = rawCode.toLowerCase();
   const base = loadPersonaPrompt(code) || { system: [] };
 
   try {

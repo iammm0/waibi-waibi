@@ -2,15 +2,25 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MBTI_TYPES } from '@/lib/mbti';
+import { useVibe } from '@/app/providers';
 import { FaSpinner } from 'react-icons/fa6';
 
+// 轻量级、适合聊天的模型（OpenAI 兼容或代理到 openai 风格端点）
 const DEFAULT_MODELS = [
-  'gpt-4o',
-  'gpt-4o-mini',
-  'gpt-4o-realtime-preview-2024-12-17',
+  'gpt-4o-mini',            // OpenAI 轻量聊天
+  'gpt-4.1-nano',          // Nano 级成本
+  'gpt-4.1-mini',          // Mini 级性能/成本折中
+  'deepseek-v3.1',         // DeepSeek 轻量聊天
+  'deepseek-chat',         // DeepSeek 聊天稳定版
+  'qwen-turbo',            // 阿里通义 Turbo 级
+  'mistral-small-latest',  // Mistral 小型聊天
+  'llama-3-8b',            // Meta 小参数聊天
+  'yi-lightning',          // 零一万物轻量
+  'glm-4.5-flash',         // 智谱轻量快推
 ];
 
 export default function PersonaChat() {
+  const { mode } = useVibe();
   const [code, setCode] = useState<string>('intj');
   const [model, setModel] = useState<string>('gpt-4o');
   const [customModel, setCustomModel] = useState<string>('');
@@ -66,79 +76,103 @@ export default function PersonaChat() {
 
   return (
     <div className="space-y-4">
-      {/* 顶部：人格下拉 + 加载状态（响应式布局） */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-        <div className="flex items-center gap-2">
-          <label className="text-sm opacity-70">人格：</label>
-          <select
-            className="rounded border px-2 py-1 min-w-[120px]"
-            value={code}
-            onChange={(e)=>setCode(e.target.value)}
-          >
-            {MBTI_TYPES.map((p) => (
-              <option key={p.id} value={p.name.toLowerCase()}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {personaLoading && (
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <FaSpinner className="animate-spin text-[var(--accent-cyan)]" />
-            <span>人格意识在思考中…</span>
+      {/* 顶部工具栏 */}
+      <div className="rounded-xl border p-3 sm:p-4 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-lg font-semibold tracking-wide">聊天</div>
+            {personaLoading && (
+              <div className="flex items-center gap-2 text-sm opacity-80">
+                <FaSpinner className="animate-spin text-[var(--accent-cyan)]" />
+                <span>人格意识在思考中…</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* 模型选择（响应式横排） */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
-        <div className="flex items-center gap-2">
-          <label className="opacity-70">模型：</label>
-          <select
-            className="rounded border px-2 py-1"
-            value={model}
-            onChange={(e)=>setModel(e.target.value)}
-          >
-            {DEFAULT_MODELS.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-            <option value="">自定义...</option>
-          </select>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 text-sm w-full">
+            <label className={`${mode === 'waibi' ? 'text-white opacity-70' : 'text-gray-900 opacity-100'}`}>人格</label>
+            <select
+              className={`w-full sm:w-auto rounded-md border px-2 py-2 sm:py-1 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] ${mode === 'waibi' ? 'bg-black text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'}`}
+              value={code}
+              onChange={(e)=>setCode(e.target.value)}
+            >
+              {MBTI_TYPES.map((p) => (
+                <option className={mode === 'waibi' ? 'bg-black text-white' : 'bg-white text-gray-900'} key={p.id} value={p.name.toLowerCase()}>{p.name}</option>
+              ))}
+            </select>
+            <label className={`ml-2 ${mode === 'waibi' ? 'text-white opacity-70' : 'text-gray-900 opacity-100'}`}>模型</label>
+            <select
+              className={`w-full sm:w-auto rounded-md border px-2 py-2 sm:py-1 focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] ${mode === 'waibi' ? 'bg-black text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'}`}
+              value={model}
+              onChange={(e)=>setModel(e.target.value)}
+            >
+              {DEFAULT_MODELS.map((m) => (
+                <option className={mode === 'waibi' ? 'bg-black text-white' : 'bg-white text-gray-900'} key={m} value={m}>{m}</option>
+              ))}
+              <option className={mode === 'waibi' ? 'bg-black text-white' : 'bg-white text-gray-900'} value="">自定义...</option>
+            </select>
+            <input
+              className={`w-full sm:w-auto min-w-[200px] rounded-md border px-3 py-2 sm:py-1 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] ${mode === 'waibi' ? 'bg-black text-white border-gray-700 placeholder-gray-400' : 'bg-white text-gray-900 border-gray-300'}`}
+              placeholder="自定义模型名（留空则用上面选择）"
+              value={customModel}
+              onChange={(e)=>setCustomModel(e.target.value)}
+            />
+          </div>
         </div>
-        <input
-          className="min-w-[220px] rounded border px-2 py-1"
-          placeholder="自定义模型名（留空则用上面选择）"
-          value={customModel}
-          onChange={(e)=>setCustomModel(e.target.value)}
-        />
       </div>
 
-      {/* 消息区：在加载人格时显示骨架/动画提示 */}
-      <div className="rounded-xl border p-3 max-h-[420px] overflow-y-auto space-y-2">
+      {/* 消息区 */}
+      <div className="rounded-2xl border p-3 sm:p-4 max-h-[520px] overflow-y-auto space-y-3 bg-[color:color-mix(in_srgb,transparent_92%,currentColor_5%)]">
         {personaLoading && (
-          <div className="flex items-center justify-center gap-2 py-6 text-sm opacity-80">
+          <div className="flex items-center justify-center gap-2 py-8 text-sm opacity-80">
             <FaSpinner className="animate-spin text-[var(--accent-cyan)]" />
             <span>正在加载 {code.toUpperCase()} 的记忆…</span>
           </div>
         )}
+
+        {!personaLoading && messages.length === 0 && (
+          <div className="text-center text-sm opacity-70 py-10">
+            还没有消息，先和 {code.toUpperCase()} 打个招呼吧～
+          </div>
+        )}
+
         {!personaLoading && messages.map((m, i) => (
-          <div key={i} className={`px-3 py-2 rounded ${m.role==='user'?'bg-[color:color-mix(in_srgb,currentColor_10%,transparent)]':'bg-[color:color-mix(in_srgb,currentColor_6%,transparent)]'}`}>
-            <div className={`text-xs opacity-70 mb-1 ${m.role==='user'?'text-[var(--accent-cyan)]':'text-[var(--accent-purple)]'}`}>{m.role==='user'?'你':'人格'}</div>
-            <div className="whitespace-pre-wrap text-sm">{m.content}</div>
+          <div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}>
+            <div className={`flex items-start gap-2 max-w-[80%] ${m.role==='user'?'flex-row-reverse':''}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${m.role==='user'?'bg-[var(--accent-cyan)] text-white':'bg-[var(--accent-purple)] text-white'}`}>
+                {m.role==='user'?'你':code.slice(0,2).toUpperCase()}
+              </div>
+              <div className={`px-3 py-2 rounded-2xl text-sm leading-relaxed shadow-sm border ${m.role==='user'?'bg-[color:color-mix(in_srgb,currentColor_10%,transparent)] border-current/10':'bg-[color:color-mix(in_srgb,currentColor_6%,transparent)] border-current/10'}`}>
+                <div className={`text-[10px] opacity-60 mb-1 ${m.role==='user'?'text-[var(--accent-cyan)]':'text-[var(--accent-purple)]'}`}>{m.role==='user'?'你':'人格'}</div>
+                <div className="whitespace-pre-wrap">{m.content}</div>
+              </div>
+            </div>
           </div>
         ))}
+        {loading && (
+          <div className="flex items-center gap-2 text-sm opacity-80">
+            <div className="w-8 h-8 rounded-full bg-[var(--accent-purple)] text-white flex items-center justify-center">{code.slice(0,2).toUpperCase()}</div>
+            <div className="px-3 py-2 rounded-2xl border border-current/10 bg-[color:color-mix(in_srgb,currentColor_6%,transparent)]">
+              <span className="inline-flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-current/40 animate-bounce"></span>
+                <span className="w-2 h-2 rounded-full bg-current/40 animate-bounce [animation-delay:120ms]"></span>
+                <span className="w-2 h-2 rounded-full bg-current/40 animate-bounce [animation-delay:240ms]"></span>
+              </span>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
       {/* 输入区 */}
-      <form onSubmit={send} className="flex items-center gap-2">
+      <form onSubmit={send} className="sticky bottom-2 flex items-center gap-2">
         <input
-          className="flex-1 rounded-md border border-current/30 bg-transparent px-2 py-2 text-sm"
+          className="flex-1 rounded-lg border border-current/30 bg-transparent px-3 py-2 text-sm shadow-sm"
           placeholder={`向 ${code.toUpperCase()} 说点什么...`}
           value={input}
           onChange={(e)=>setInput(e.target.value)}
           disabled={loading || personaLoading}
         />
-        <button type="submit" className="badge glitch-hover" disabled={loading || personaLoading || !input.trim()}>
+        <button type="submit" className="px-4 h-10 rounded-lg text-white bg-[var(--accent-cyan)] hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed transition" disabled={loading || personaLoading || !input.trim()}>
           {loading ? <FaSpinner className="animate-spin" /> : '发送'}
         </button>
       </form>

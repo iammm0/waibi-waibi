@@ -12,6 +12,14 @@ export default function MbtiIndexPage() {
     : 'bg-white border border-gray-200 hover:border-gray-300';
   const nameClass = mode === 'waibi' ? 'text-white' : 'text-gray-900';
   const descClass = mode === 'waibi' ? 'text-gray-300' : 'text-gray-600';
+  
+  const groups: { [k: string]: string[] } = {
+    NT: ['INTJ', 'INTP', 'ENTJ', 'ENTP'],
+    NF: ['INFJ', 'INFP', 'ENFJ', 'ENFP'],
+    SJ: ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'],
+    SP: ['ISTP', 'ISFP', 'ESTP', 'ESFP']
+  };
+  const ordered = ['NT', 'NF', 'SJ', 'SP'];
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -20,23 +28,31 @@ export default function MbtiIndexPage() {
         subtitle="点击一个人格进入其训练详情页，预置该人格的提示词与画像"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {MBTI_TYPES.map((p) => (
-          <Link
-            key={p.id}
-            href={`/mbti/${p.id}`}
-            className={`rounded-xl overflow-hidden transition shadow-sm ${cardClass}`}
-          >
-            <div className="aspect-[4/3] w-full overflow-hidden">
-              <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+      {ordered.map((g) => {
+        const items = MBTI_TYPES.filter(p => groups[g].includes(p.name));
+        return (
+          <div key={g} className="mt-8">
+            <h3 className={`text-xl font-semibold mb-4 ${nameClass}`}>{g} 分组</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {items.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/mbti/${p.id}`}
+                  className={`rounded-xl overflow-hidden transition shadow-sm ${cardClass}`}
+                >
+                  <div className="aspect-[4/3] w-full overflow-hidden">
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="p-4">
+                    <div className={`text-lg font-semibold ${nameClass}`}>{p.name}</div>
+                    <div className={`text-sm mt-1 line-clamp-2 ${descClass}`}>{p.description}</div>
+                  </div>
+                </Link>
+              ))}
             </div>
-            <div className="p-4">
-              <div className={`text-lg font-semibold ${nameClass}`}>{p.name}</div>
-              <div className={`text-sm mt-1 line-clamp-2 ${descClass}`}>{p.description}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

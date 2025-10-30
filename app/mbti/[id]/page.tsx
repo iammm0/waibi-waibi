@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import SectionHeader from '@/components/section-header';
 import { useVibe } from '@/app/providers';
 import ModelParameters from '@/components/model-parameters';
@@ -22,8 +22,8 @@ interface TrainingSample {
   scenario?: string;
 }
 
-export default function MbtiTrainingDetail({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const persona = getPersonalityById(id);
   const { mode } = useVibe();
 
@@ -73,6 +73,18 @@ export default function MbtiTrainingDetail({ params }: { params: { id: string } 
   const handleAddSample = () => {
     if (currentSample.input.trim() && currentSample.response.trim()) {
       setTrainingSamples([...trainingSamples, currentSample]);
+      // 同步写入服务器（若已登录）
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        const code = persona?.name?.toLowerCase();
+        if (token && code) {
+          fetch(`/api/persona/${code}/training`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ input: currentSample.input, response: currentSample.response, scenario: currentSample.scenario })
+          }).catch(() => {});
+        }
+      } catch {}
       setCurrentSample({ input: '', response: '', scenario: '' });
     }
   };
@@ -117,13 +129,13 @@ export default function MbtiTrainingDetail({ params }: { params: { id: string } 
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         <div className="lg:col-span-2 space-y-6">
-          <div className={ `bg-${mode === 'waibi' ? 'black' : 'white'} dark:bg-gray-900 rounded-xl shadow-md p-6 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-200'}` }>
-            <h3 className="text-xl font-semibold mb-4">添加训练对话样本</h3>
+          <div className={ `bg-${mode === 'waibi' ? 'black' : 'white'} rounded-xl shadow-md p-6 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-200'}` }>
+            <h3 className={`text-xl font-semibold mb-4 ${mode === 'waibi' ? 'text-white' : 'text-gray-900'}`}>添加训练对话样本</h3>
             <div className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium text-${mode === 'waibi' ? 'white' : 'gray-900'} dark:text-gray-100 mb-1`}>用户输入</label>
+                <label className={`block text-sm font-medium text-${mode === 'waibi' ? 'white' : 'gray-900'} mb-1`}>用户输入</label>
                 <textarea
-                  className={`w-full p-3 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-300'} rounded-lg focus:ring-2 focus:ring-${mode === 'waibi' ? 'green-500' : 'blue-500'}`}
+                  className={`w-full p-3 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-300'} rounded-lg focus:ring-2 focus:ring-${mode === 'waibi' ? 'green-500' : 'blue-500'} ${mode === 'waibi' ? 'bg-gray-900 text-gray-100 placeholder-gray-500' : 'bg-white text-gray-900 placeholder-gray-400'}`}
                   rows={3}
                   placeholder="输入用户可能会说的话..."
                   value={currentSample.input}
@@ -134,7 +146,7 @@ export default function MbtiTrainingDetail({ params }: { params: { id: string } 
               <div>
                 <label className={`block text-sm font-medium text-${mode === 'waibi' ? 'gray-300' : 'gray-700'} mb-1`}>AI回应</label>
                 <textarea
-                  className={`w-full p-3 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-300'} rounded-lg focus:ring-2 focus:ring-${mode === 'waibi' ? 'green-500' : 'blue-500'}`}
+                  className={`w-full p-3 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-300'} rounded-lg focus:ring-2 focus:ring-${mode === 'waibi' ? 'green-500' : 'blue-500'} ${mode === 'waibi' ? 'bg-gray-900 text-gray-100 placeholder-gray-500' : 'bg-white text-gray-900 placeholder-gray-400'}`}
                   rows={3}
                   placeholder="输入AI应该回应的内容..."
                   value={currentSample.response}
@@ -146,7 +158,7 @@ export default function MbtiTrainingDetail({ params }: { params: { id: string } 
                 <label className={`block text-sm font-medium text-${mode === 'waibi' ? 'gray-300' : 'gray-700'} mb-1`}>场景描述 (可选)</label>
                 <input
                   type="text"
-                  className={`w-full p-3 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-300'} rounded-lg focus:ring-2 focus:ring-${mode === 'waibi' ? 'green-500' : 'blue-500'}`}
+                  className={`w-full p-3 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-300'} rounded-lg focus:ring-2 focus:ring-${mode === 'waibi' ? 'green-500' : 'blue-500'} ${mode === 'waibi' ? 'bg-gray-900 text-gray-100 placeholder-gray-500' : 'bg-white text-gray-900 placeholder-gray-400'}`}
                   placeholder="描述这个对话发生的场景..."
                   value={currentSample.scenario || ''}
                   onChange={(e) => setCurrentSample({...currentSample, scenario: e.target.value})}

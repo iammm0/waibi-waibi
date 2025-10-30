@@ -3,13 +3,14 @@ import { verifyAccessToken } from '@/lib/jwt';
 import { connectToDatabase } from '@/lib/db';
 import UserPrompt from '@/model/UserPrompt';
 
-export async function POST(req: NextRequest, { params }: { params: { code: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ code: string }> }) {
   const auth = req.headers.get('authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   const payload = token ? verifyAccessToken(token) : null;
   if (!payload) return NextResponse.json({ message: '未授权' }, { status: 401 });
 
-  const code = params.code.toLowerCase();
+  const { code: rawCode } = await context.params;
+  const code = rawCode.toLowerCase();
   const { text } = await req.json();
   if (!text || typeof text !== 'string') return NextResponse.json({ message: '缺少内容' }, { status: 400 });
 

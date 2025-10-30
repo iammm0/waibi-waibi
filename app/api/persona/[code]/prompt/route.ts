@@ -4,8 +4,9 @@ import { connectToDatabase } from '@/lib/db';
 import UserPrompt from '@/model/UserPrompt';
 import { getPersonaApiEndpoint } from '@/lib/persona-config';
 
-export async function GET(_req: NextRequest, { params }: { params: { code: string } }) {
-  const code = params.code.toLowerCase();
+export async function GET(_req: NextRequest, context: { params: Promise<{ code: string }> }) {
+  const { code: rawCode } = await context.params;
+  const code = rawCode.toLowerCase();
   const base = loadPersonaPrompt(code) || { system: [] };
   const api = getPersonaApiEndpoint(code);
   try {
