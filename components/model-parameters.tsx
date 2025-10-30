@@ -1,6 +1,7 @@
+
 'use client';
 
-import { ModelParams } from '@/app/mbti/page';
+import { ModelParams } from '@/types/model';
 import { useVibe } from '@/app/providers';
 
 interface ModelParametersProps {
