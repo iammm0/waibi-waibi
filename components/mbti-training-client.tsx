@@ -6,7 +6,8 @@ import { useState } from "react";
 // 定义题目类型
 export type TrainingContent = { id: string; question: string; options: string[] };
 
-export function MbtiTrainingClient({ personality, questions }: { personality: { name: string; id: string; description: string }; questions: TrainingContent[] }) {
+import { ModelParams } from '@/types/model';
+export function MbtiTrainingClient({ personality, questions, modelParams }: { personality: { name: string; id: string; description: string }; questions: TrainingContent[]; modelParams: ModelParams }) {
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [index, setIndex] = useState(0);
 
@@ -20,21 +21,26 @@ export function MbtiTrainingClient({ personality, questions }: { personality: { 
     const prev = () => setIndex((prev) => Math.max(prev - 1, 0));
 
     const submitTraining = async () => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
         const response = await fetch(`/api/training/${personality.id}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             body: JSON.stringify({
                 answers: Object.keys(answers).map((questionId) => ({
                     questionId,
                     answer: answers[questionId],
                 })),
+                modelParams
             }),
         });
 
         if (response.ok) {
             alert("训练数据已保存");
+        } else if (response.status === 401) {
+            alert("请先登录后再提交训练数据");
         } else {
             alert("提交失败");
         }
