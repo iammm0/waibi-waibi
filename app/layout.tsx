@@ -21,7 +21,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="zh-CN" suppressHydrationWarning data-mode="waibi">
+        <html lang="zh-CN" suppressHydrationWarning data-mode="waibi" data-scroll-behavior="smooth">
         <body>
         <Providers initialMode="waibi">
             {children}
