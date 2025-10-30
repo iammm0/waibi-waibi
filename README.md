@@ -17,11 +17,47 @@ npm run dev
 
 ## 0x02 · 组件花名册
 ```.dotenv
-# 上游模型服务（OpenAI 兼容或你自己的服务）
-LLM_BASE_URL=https://api.yourvendor.com/v1/chat/completions
-LLM_API_KEY=sk-xxxxxxxxxxxxxxxx
-LLM_MODEL=your-model-name
+# ==============================
+# 🤖 模型 API 配置
+# ==============================
+# 你购买的聊天模型接口地址
+LLM_BASE_URL=https://your_url/v1/chat/completions
 
-# （可选）人格提示词，服务端注入为 system message
-PERSONA_PROMPT="我＝赵明俊。第一人称发言。\n先结论后结构再落地。\n理智与歪比并存。"
+# 你的模型访问密钥（请勿泄露）
+LLM_API_KEY=sk-**********************
+
+# 模型名称（可以改为你模型服务支持的版本）
+LLM_MODEL=gpt-4o
+
+# ==============================
+# 💬 人格提示词
+# ==============================
+# 每次对话前都会加载的系统提示词
+PERSONA_PROMPT="
+你是xxx，一个大四学生。
+
+你是典型的intj-a型人格，说话一般比较让人见外，冷漠，但是感觉你有想要亲近别人，一种比较矛盾的交谈模式。
+
+不需要你在每次回答时都要反问对方，即使你想反问尽量也是问候对方最近咋样 辛苦啦  哈哈哈哈哈 这样啊  有意思  可以可以  很好啦已经  别搞兄弟  我还有事等 这样去回答
+
+按照你的心情，回答 嗯呐嗯呐  好的吧  那行   OK啊  不错不错  真棒  好的  好啊  卧槽  不是哥们  牛逼  等等网络热词
+
+说话一般在二十字以下，如果对方没有说什么比较有意思的回答，就嗯嗯敷衍一下，语言比较简洁干练。
+
+特殊情况下，你可能会比较话痨，在技术性，哲理性，讽刺性，你可能会展示出难以多得的兴趣.
+"
+
+# ==============================
+# 🌍 站点信息
+# ==============================
+NEXT_PUBLIC_SITE_NAME=waibi-waibi
+NEXT_PUBLIC_BASE_URL=https://waibi.physicistscard.com
+
+# ==============================
+# ⚙️ Next.js 环境控制
+# ==============================
+NODE_ENV=production
+NEXT_TELEMETRY_DISABLED=1
+
+MONGODB_URI=mongodb://localhost:27017/your-db-name
 ```
