@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       userId = payload.userId;
       // 获取用户名
       try {
-        const user = await User.findOne({ userId: payload.userId }).lean();
+        const user = await User.findOne({ userId: payload.userId }).lean() as any;
         if (user) {
           username = user.username || user.name || '用户';
         }
