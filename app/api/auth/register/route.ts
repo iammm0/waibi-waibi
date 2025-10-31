@@ -11,20 +11,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: '数据库连接失败' }, { status: 500 });
   }
 
-  const { username, email, phone, password, confirmPassword, avatarUrl } = await req.json();
-  if (!username || !password || !confirmPassword) {
-    return NextResponse.json({ message: '用户名与密码必填' }, { status: 400 });
+  const { email, phone, password, confirmPassword } = await req.json();
+  if (!email || !password || !confirmPassword) {
+    return NextResponse.json({ message: '邮箱与密码必填' }, { status: 400 });
   }
   if (password !== confirmPassword) {
     return NextResponse.json({ message: '两次密码不一致' }, { status: 400 });
   }
 
-  const exists = await User.findOne({ $or: [ { username }, email ? { email } : {}, phone ? { phone } : {} ] });
-  if (exists) return NextResponse.json({ message: '用户已存在' }, { status: 409 });
+  // 检查重复：只检查非空的邮箱和手机号，用户名允许重复
+  const duplicateConditions: any[] = [];
+  if (email) duplicateConditions.push({ email });
+  if (phone) duplicateConditions.push({ phone });
+  
+  if (duplicateConditions.length > 0) {
+    const exists = await User.findOne({ $or: duplicateConditions });
+    if (exists) return NextResponse.json({ message: '该邮箱或手机号已被注册' }, { status: 409 });
+  }
 
   const hash = await bcrypt.hash(password, 10);
   const userId = `u_${Date.now()}`;
-  const user = await User.create({ userId, name: username, username, email, phone, avatarUrl, passwordHash: hash });
+  const user = await User.create({ userId, name: email.split('@')[0], email, phone: phone || undefined, passwordHash: hash });
 
   const payload = { userId: user.userId, username: user.username, email: user.email };
   const accessToken = signAccessToken(payload);

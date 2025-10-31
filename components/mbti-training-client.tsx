@@ -22,11 +22,15 @@ export function MbtiTrainingClient({ personality, questions, modelParams }: { pe
 
     const submitTraining = async () => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        if (!token) {
+            alert("请先登录后再提交训练数据");
+            return;
+        }
         const response = await fetch(`/api/training/${personality.id}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
                 answers: Object.keys(answers).map((questionId) => ({
@@ -40,9 +44,10 @@ export function MbtiTrainingClient({ personality, questions, modelParams }: { pe
         if (response.ok) {
             alert("训练数据已保存");
         } else if (response.status === 401) {
-            alert("请先登录后再提交训练数据");
+            alert("登录已过期，请重新登录");
         } else {
-            alert("提交失败");
+            const errorData = await response.json().catch(() => ({}));
+            alert(errorData?.message || "提交失败");
         }
     };
 

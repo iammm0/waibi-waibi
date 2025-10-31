@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useVibe } from '@/app/providers';
+import AvatarEditor from '@/components/avatar-editor';
 
 type Me = { user: { userId: string; username?: string; name?: string; email?: string; phone?: string; avatarUrl?: string } };
 
@@ -13,6 +14,7 @@ export default function MePage() {
 
   const [me, setMe] = useState<Me["user"] | null>(null);
   const [error, setError] = useState('');
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
 
   const fetchMe = async () => {
     setError('');
@@ -51,27 +53,79 @@ export default function MePage() {
     setMe(null);
   };
 
-  return (
-    <div className={`mx-auto max-w-md p-6 sm:p-7 mt-10 rounded-2xl ${panelClass}`}>
-      <h1 className="text-2xl font-extrabold mb-4">个人中心</h1>
-      {me ? (
-        <div className="flex items-center gap-4">
-          <img src={me.avatarUrl || '/favicon.ico'} alt="avatar" className="h-16 w-16 rounded-full object-cover border" />
-          <div>
-            <div className="font-semibold text-lg">{me.username || me.name}</div>
-            <div className="text-xs opacity-70">ID: {me.userId}</div>
-            {me.email ? <div className="text-sm opacity-80 mt-1">{me.email}</div> : null}
-            {me.phone ? <div className="text-sm opacity-80">{me.phone}</div> : null}
-          </div>
-        </div>
-      ) : (
-        <div className="text-sm opacity-70">{error || '未登录'}</div>
-      )}
+  const handleSaveAvatar = async (imageData: string) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) {
+      alert('请先登录');
+      return;
+    }
 
-      <div className="mt-6 grid grid-cols-2 gap-2">
-        <button onClick={refreshAccess} className={`px-3 py-2 rounded-lg text-white ${accentBtn}`}>刷新令牌</button>
-        <button onClick={logout} className={`px-3 py-2 rounded-lg ${secondaryBtn}`}>退出登录</button>
+    try {
+      const res = await fetch('/api/auth/avatar', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ avatarUrl: imageData }),
+      });
+
+      if (res.ok) {
+        const data: Me = await res.json();
+        setMe(data.user);
+        setShowAvatarEditor(false);
+      } else if (res.status === 401) {
+        alert('登录已过期，请重新登录');
+        logout();
+      } else {
+        const errorData = await res.json();
+        alert(errorData?.message || '保存头像失败');
+      }
+    } catch (err: any) {
+      alert(err?.message || '保存头像失败');
+    }
+  };
+
+  return (
+    <>
+      <div className={`mx-auto max-w-md p-6 sm:p-7 mt-10 rounded-2xl ${panelClass}`}>
+        <h1 className="text-2xl font-extrabold mb-4">个人中心</h1>
+        {me ? (
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <img src={me.avatarUrl || '/favicon.ico'} alt="avatar" className="h-16 w-16 rounded-full object-cover border" />
+              <button
+                onClick={() => setShowAvatarEditor(true)}
+                className={`absolute bottom-0 right-0 w-6 h-6 rounded-full ${accentBtn} text-white text-xs flex items-center justify-center border-2 ${mode === 'waibi' ? 'border-black' : 'border-white'}`}
+                title="编辑头像"
+              >
+                ✎
+              </button>
+            </div>
+            <div>
+              <div className="font-semibold text-lg">{me.username || me.name}</div>
+              <div className="text-xs opacity-70">ID: {me.userId}</div>
+              {me.email ? <div className="text-sm opacity-80 mt-1">{me.email}</div> : null}
+              {me.phone ? <div className="text-sm opacity-80">{me.phone}</div> : null}
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm opacity-70">{error || '未登录'}</div>
+        )}
+
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <button onClick={refreshAccess} className={`px-3 py-2 rounded-lg text-white ${accentBtn}`}>刷新令牌</button>
+          <button onClick={logout} className={`px-3 py-2 rounded-lg ${secondaryBtn}`}>退出登录</button>
+        </div>
       </div>
-    </div>
+
+      {showAvatarEditor && (
+        <AvatarEditor
+          currentAvatarUrl={me?.avatarUrl}
+          onSave={handleSaveAvatar}
+          onCancel={() => setShowAvatarEditor(false)}
+        />
+      )}
+    </>
   );
 }

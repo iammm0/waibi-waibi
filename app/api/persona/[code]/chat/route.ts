@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db';
 import Interaction from '@/model/Interaction';
 import { loadPersonaPrompt } from '@/lib/persona-prompts';
 import UserPrompt from '@/model/UserPrompt';
+import TrainingSample from '@/model/TrainingSample';
 
 const DEFAULT_UPSTREAM_URL = process.env.LLM_BASE_URL ?? 'https://jeniya.cn/v1/chat/completions';
 const DEFAULT_API_KEY = process.env.LLM_API_KEY ?? '';
@@ -39,11 +40,34 @@ export async function POST(req: NextRequest, context: { params: Promise<{ code: 
   const contributed = await UserPrompt.find({ personaCode: code }).sort({ createdAt: 1 }).lean();
   const contributedTexts = contributed.map((c) => c.text).filter(Boolean);
 
-  // 组合 system 指令
+  // 加载用户本人的训练数据
+  const userTrainingSamples = await TrainingSample.find({ 
+    userId: payload.userId, 
+    personaCode: code 
+  }).sort({ createdAt: 1 }).lean();
+
+  // 将训练数据转换为提示词格式
+  let trainingDataPrompt = '';
+  if (userTrainingSamples.length > 0) {
+    const trainingExamples = userTrainingSamples.map((sample, index) => {
+      let example = `示例 ${index + 1}:`;
+      if (sample.scenario) {
+        example += `\n场景: ${sample.scenario}`;
+      }
+      example += `\n用户输入: ${sample.input}`;
+      example += `\n期望回复: ${sample.response}`;
+      return example;
+    }).join('\n\n');
+    
+    trainingDataPrompt = `\n\n以下是用户本人添加的训练数据，请根据这些示例来调整你的回复风格：\n${trainingExamples}`;
+  }
+
+  // 组合 system 指令：先加载人格预设的系统提示词，再加载用户贡献的提示词，最后加载用户本人的训练数据
   const systemContent = [
     ...(Array.isArray(base.system) ? base.system : []),
     ...contributedTexts,
-  ].join('\n');
+    trainingDataPrompt,
+  ].join('\n').trim();
 
   const url = DEFAULT_UPSTREAM_URL;
   const key = getPersonaApiKey(code);

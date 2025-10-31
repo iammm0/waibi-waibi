@@ -53,20 +53,32 @@ export default function PersonaChat() {
     e?.preventDefault();
     const text = input.trim();
     if (!text || loading || personaLoading) return;
-    setLoading(true);
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) {
+      alert('请先登录后再进行此操作');
+      return;
+    }
+    setLoading(true);
     const optimistic = [...messages, { role: 'user' as const, content: text }];
     setMessages(optimistic);
     setInput('');
     try {
       const res = await fetch(`/api/persona/${code}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ message: text, model: effectiveModel || undefined })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || '发送失败');
-      setMessages([...optimistic, { role: 'assistant', content: data.reply }]);
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert('登录已过期，请重新登录');
+          setMessages([...optimistic, { role: 'assistant', content: '登录已过期，请重新登录' }]);
+        } else {
+          throw new Error(data?.message || '发送失败');
+        }
+      } else {
+        setMessages([...optimistic, { role: 'assistant', content: data.reply }]);
+      }
     } catch (err: any) {
       setMessages([...optimistic, { role: 'assistant', content: `出错了：${err?.message || '未知错误'}` }]);
     } finally {
