@@ -4,17 +4,25 @@
 FROM docker.io/library/node:22 AS deps
 WORKDIR /app
 
-# 设置国内 npm 源（加速下载，避免网络问题导致 .node 文件下载失败）
-RUN npm config set registry https://registry.npmmirror.com
+# 设置国内 npm 源和代理配置（加速下载，避免网络问题）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set maxsockets 1 && \
+    npm config set strict-ssl false
 
 # 拷贝 package.json 和 package-lock.json
 COPY package.json package-lock.json* ./
 
-# 可选：清理 npm 缓存
+# 清理 npm 缓存
 RUN npm cache clean --force
 
 # 安装所有依赖（包括 dev！因为 Biome、TailwindCSS 可能是 devDependencies，但构建时需要）
-RUN npm ci
+# 使用 npm ci 确保锁定版本，添加重试机制避免网络问题
+RUN npm ci --legacy-peer-deps --no-audit --no-fund --verbose || \
+    (npm cache clean --force && sleep 2 && npm ci --legacy-peer-deps --no-audit --no-fund --verbose) || \
+    (sleep 5 && npm cache clean --force && npm install --legacy-peer-deps --no-audit --no-fund --verbose)
 
 # ======================
 # 第二阶段：构建 Next.js 应用
@@ -44,8 +52,9 @@ ENV PORT=3000
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-# 拷贝环境变量文件（若存在），用于运行期配置，如 MONGODB_URI 等
-COPY --from=builder /app/.env.local ./.env.local
+# 拷贝 prompts 目录（人格提示词文件）
+COPY --from=builder /app/prompts ./prompts
+# 注意：环境变量文件不需要复制，应通过 docker-compose 的 environment 或运行时环境变量传递
 
 # 暴露端口 & 启动命令
 EXPOSE 3000
