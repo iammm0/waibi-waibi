@@ -13,7 +13,39 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ message: '数据库连接失败' }, { status: 500 });
   }
-  const user = await User.findOne({ userId: payload.userId }, { passwordHash: 0 }).lean();
+  const user = await User.findOne({ userId: payload.userId }, { passwordHash: 0 }).lean() as any;
+  if (!user) return NextResponse.json({ message: '用户不存在' }, { status: 404 });
+  return NextResponse.json({ user });
+}
+
+export async function PUT(req: NextRequest) {
+  const auth = req.headers.get('authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  const payload = token ? verifyAccessToken(token) : null;
+  if (!payload) return NextResponse.json({ message: '未授权' }, { status: 401 });
+  
+  try {
+    await connectToDatabase();
+  } catch {
+    return NextResponse.json({ message: '数据库连接失败' }, { status: 500 });
+  }
+
+  const body = await req.json();
+  const { username, name, email, phone, profileVisibility } = body;
+
+  const updateData: any = {};
+  if (username !== undefined) updateData.username = username;
+  if (name !== undefined) updateData.name = name;
+  if (email !== undefined) updateData.email = email;
+  if (phone !== undefined) updateData.phone = phone;
+  if (profileVisibility !== undefined) updateData.profileVisibility = profileVisibility;
+
+  const user = await User.findOneAndUpdate(
+    { userId: payload.userId },
+    updateData,
+    { new: true }
+  ).select('-passwordHash').lean() as any;
+
   if (!user) return NextResponse.json({ message: '用户不存在' }, { status: 404 });
   return NextResponse.json({ user });
 }
