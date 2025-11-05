@@ -5,7 +5,9 @@ import SectionHeader from '@/components/section-header';
 import { useVibe } from '@/app/providers';
 import ModelParameters from '@/components/model-parameters';
 import TrainingStatus from '@/components/training-status';
+import TrainingPreview from '@/components/training-preview';
 import { getPersonalityById } from '@/lib/mbti';
+import { fetchWithAuth } from '@/lib/auth-utils';
 
 export interface ModelParams {
   temperature: number;
@@ -20,6 +22,7 @@ interface TrainingSample {
   input: string;
   response: string;
   scenario?: string;
+  _id?: string; // 用于服务器删除
 }
 
 export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -43,18 +46,72 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
 
   const [basePromptCount, setBasePromptCount] = useState(0);
   const [contribPromptCount, setContribPromptCount] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
 
+  // 从服务器加载训练样本
   useEffect(() => {
-    const savedSamples = localStorage.getItem('trainingSamples');
+    const code = persona?.name?.toLowerCase() || '';
+    if (!code) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token) {
+      // 已登录，从服务器加载
+      fetchWithAuth(`/api/persona/${code}/training`)
+        .then(async (r) => {
+          if (r.ok) {
+            const data = await r.json();
+            const items = data.items || [];
+            // 转换为前端需要的格式
+            const samples: TrainingSample[] = items.map((item: any) => ({
+              input: item.input || '',
+              response: item.response || '',
+              scenario: item.scenario || '',
+              _id: item._id, // 保存ID用于删除
+            }));
+            setTrainingSamples(samples);
+          }
+        })
+        .catch((err) => {
+          console.error('加载训练样本失败:', err);
+        });
+    } else {
+      // 未登录，从 localStorage 加载（兼容旧逻辑）
+      const savedSamples = localStorage.getItem('trainingSamples');
+      if (savedSamples) {
+        try {
+          setTrainingSamples(JSON.parse(savedSamples));
+        } catch (e) {
+          console.error('解析 localStorage 训练样本失败:', e);
+        }
+      }
+    }
+
+    // 加载其他本地设置
     const savedParams = localStorage.getItem('modelParams');
     const savedMode = localStorage.getItem('advancedMode');
-    if (savedSamples) setTrainingSamples(JSON.parse(savedSamples));
-    if (savedParams) setModelParams(JSON.parse(savedParams));
-    if (savedMode) setIsAdvancedMode(JSON.parse(savedMode));
-  }, []);
+    if (savedParams) {
+      try {
+        setModelParams(JSON.parse(savedParams));
+      } catch (e) {
+        console.error('解析 modelParams 失败:', e);
+      }
+    }
+    if (savedMode) {
+      try {
+        setIsAdvancedMode(JSON.parse(savedMode));
+      } catch (e) {
+        console.error('解析 advancedMode 失败:', e);
+      }
+    }
+  }, [persona?.name]);
 
+  // 保存到 localStorage（仅用于未登录用户的本地存储）
   useEffect(() => {
-    localStorage.setItem('trainingSamples', JSON.stringify(trainingSamples));
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    // 如果未登录，才保存到 localStorage
+    if (!token) {
+      localStorage.setItem('trainingSamples', JSON.stringify(trainingSamples));
+    }
     localStorage.setItem('modelParams', JSON.stringify(modelParams));
     localStorage.setItem('advancedMode', JSON.stringify(isAdvancedMode));
   }, [trainingSamples, modelParams, isAdvancedMode]);
@@ -70,29 +127,78 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
     }).catch(() => {});
   }, [persona?.name]);
 
-  const handleAddSample = () => {
+  const handleAddSample = async () => {
     if (currentSample.input.trim() && currentSample.response.trim()) {
-      setTrainingSamples([...trainingSamples, currentSample]);
-      // 同步写入服务器（若已登录）
-      try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-        const code = persona?.name?.toLowerCase();
-        if (token && code) {
-          fetch(`/api/persona/${code}/training`, {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const code = persona?.name?.toLowerCase();
+
+      // 如果已登录，先保存到服务器，获取ID后再更新本地状态
+      if (token && code) {
+        try {
+          const res = await fetchWithAuth(`/api/persona/${code}/training`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ input: currentSample.input, response: currentSample.response, scenario: currentSample.scenario })
-          }).catch(() => {});
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              input: currentSample.input, 
+              response: currentSample.response, 
+              scenario: currentSample.scenario 
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            // 添加新样本，包含服务器返回的ID
+            setTrainingSamples([...trainingSamples, {
+              ...currentSample,
+              _id: data.id,
+            }]);
+          } else {
+            // 服务器保存失败，仍然添加到本地（兼容未登录或错误情况）
+            setTrainingSamples([...trainingSamples, currentSample]);
+          }
+        } catch (err) {
+          console.error('保存训练样本失败:', err);
+          // 出错时仍然添加到本地
+          setTrainingSamples([...trainingSamples, currentSample]);
         }
-      } catch {}
+      } else {
+        // 未登录，只保存到本地
+        setTrainingSamples([...trainingSamples, currentSample]);
+      }
       setCurrentSample({ input: '', response: '', scenario: '' });
     }
   };
 
-  const handleDeleteSample = (index: number) => {
+  const handleDeleteSample = async (index: number) => {
+    const sample = trainingSamples[index];
+    const originalSamples = [...trainingSamples]; // 保存原始状态用于恢复
     const newSamples = [...trainingSamples];
     newSamples.splice(index, 1);
     setTrainingSamples(newSamples);
+
+    // 如果样本有_id（从服务器加载的），需要同步删除服务器数据
+    if (sample._id) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      if (token) {
+        try {
+          const res = await fetchWithAuth('/api/me/training', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: sample._id }),
+          });
+          if (!res.ok) {
+            console.error('删除服务器训练样本失败');
+            // 如果删除失败，恢复本地状态
+            setTrainingSamples(originalSamples);
+            alert('删除失败，请重试');
+          }
+        } catch (err) {
+          console.error('删除训练样本失败:', err);
+          // 如果删除失败，恢复本地状态
+          setTrainingSamples(originalSamples);
+          alert('删除失败，请重试');
+        }
+      }
+    }
   };
 
   const handleParamChange = (param: keyof ModelParams, value: number) => {
@@ -124,7 +230,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
+    <div className="container mx-auto px-4 py-2 max-w-5xl">
       <SectionHeader title={`${persona?.name || '人格'} 训练中心`} subtitle={persona?.description || ''} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
@@ -175,7 +281,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
           </div>
 
           <div className={`bg-${mode === 'waibi' ? 'black' : 'white'} rounded-xl shadow-md p-6 border border-${mode === 'waibi' ? 'green-500/30' : 'gray-200'}`}>
-            <h3 className="text-xl font-semibold mb-4">训练样本列表 ({trainingSamples.length})</h3>
+            <h3 className={`text-xl font-semibold mb-4 ${mode === 'waibi' ? 'text-white' : 'text-gray-900'}`}>训练样本列表 ({trainingSamples.length})</h3>
             {trainingSamples.length === 0 ? (
               <p className={`text-${mode === 'waibi' ? 'gray-400' : 'gray-500'} italic text-center py-8`}>
                 尚未添加训练样本，请在上方添加至少一个对话样本
@@ -190,8 +296,8 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
                     >
                       删除
                     </button>
-                    <div className="font-medium text-gray-900 mb-1">用户：{sample.input}</div>
-                    <div className="text-gray-700 mb-2">AI：{sample.response}</div>
+                    <div className={`font-medium mb-1 ${mode === 'waibi' ? 'text-gray-200' : 'text-gray-900'}`}>用户：{sample.input}</div>
+                    <div className={`mb-2 ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>AI：{sample.response}</div>
                     {sample.scenario && (
                       <div className={`text-xs text-${mode === 'waibi' ? 'green-400' : 'gray-500'} bg-${mode === 'waibi' ? 'gray-800' : 'gray-100'} inline-block px-2 py-1 rounded`}>
                         {sample.scenario}
@@ -236,9 +342,29 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
             >
               {trainingStatus === 'training' ? '训练中...' : '开始训练模型'}
             </button>
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className={`w-full py-3 mt-3 rounded-lg transition ${
+                mode === 'waibi'
+                  ? 'bg-gray-800 hover:bg-gray-700 text-white border border-green-500/30'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300'
+              }`}
+            >
+              {showPreview ? '隐藏预览' : '预览训练效果'}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* 预览训练区域 */}
+      {showPreview && (
+        <div className="mt-8">
+          <TrainingPreview
+            personaCode={persona?.name?.toLowerCase() || ''}
+            personaName={persona?.name || '人格'}
+          />
+        </div>
+      )}
     </div>
   );
 }
