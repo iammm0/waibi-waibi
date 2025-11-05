@@ -18,6 +18,23 @@ interface User extends Document {
         epochs: number;
         learningRate: number;
     };
+    // 公开/私密状态控制
+    profileVisibility: {
+        email?: 'public' | 'private';
+        phone?: 'public' | 'private';
+        username?: 'public' | 'private';
+        avatarUrl?: 'public' | 'private';
+        name?: 'public' | 'private';
+    };
+    // 订阅信息
+    subscription?: {
+        active: boolean;
+        plan?: string;
+        startDate?: Date;
+        endDate?: Date;
+        price?: number;
+        testMode?: boolean; // 是否为测试模式
+    };
     createdAt: Date;
 }
 
@@ -43,6 +60,21 @@ const userSchema = new Schema<User>({
     maxTokens: { type: Number, default: 200 },
     epochs: { type: Number, default: 5 },
     learningRate: { type: Number, default: 0.001 }
+  },
+  profileVisibility: {
+    email: { type: String, enum: ['public', 'private'], default: 'private' },
+    phone: { type: String, enum: ['public', 'private'], default: 'private' },
+    username: { type: String, enum: ['public', 'private'], default: 'public' },
+    avatarUrl: { type: String, enum: ['public', 'private'], default: 'public' },
+    name: { type: String, enum: ['public', 'private'], default: 'public' },
+  },
+  subscription: {
+    active: { type: Boolean, default: false },
+    plan: { type: String },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    price: { type: Number, default: 20 },
+    testMode: { type: Boolean, default: false },
   },
   createdAt: { type: Date, default: Date.now },
 });
