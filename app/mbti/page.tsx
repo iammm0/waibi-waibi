@@ -4,6 +4,7 @@ import SectionHeader from '@/components/section-header';
 import Link from 'next/link';
 import { MBTI_TYPES } from '@/lib/mbti';
 import { useVibe } from '@/app/providers';
+import ProgressiveImage from '@/components/progressive-image';
 
 export default function MbtiIndexPage() {
   const { mode } = useVibe();
@@ -22,7 +23,7 @@ export default function MbtiIndexPage() {
   const ordered = ['NT', 'NF', 'SJ', 'SP'];
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
+    <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader
         title="选择你要训练的人格"
         subtitle="点击一个人格进入其训练详情页，预置该人格的提示词与画像"
@@ -40,8 +41,15 @@ export default function MbtiIndexPage() {
                   href={`/mbti/${p.id}`}
                   className={`rounded-xl overflow-hidden transition shadow-sm ${cardClass}`}
                 >
-                  <div className="aspect-[4/3] w-full overflow-hidden">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  <div className="aspect-[4/3] w-full overflow-hidden relative">
+                    <ProgressiveImage
+                      src={p.image}
+                      alt={p.name}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      objectFit="cover"
+                      priority={false}
+                    />
                   </div>
                   <div className="p-4">
                     <div className={`text-lg font-semibold ${nameClass}`}>{p.name}</div>
