@@ -8,7 +8,7 @@ import { FaMoon, FaSun } from "react-icons/fa";
 import Link from "next/link";
 
 const navItems = [
-  { href: "/", label: "首页" },
+  { href: "/", label: "收件箱" },
   { href: "/guestbook", label: "留言板" },
   { href: "/chat", label: "聊一聊" },
   { href: "/mbti", label: "训练" },
