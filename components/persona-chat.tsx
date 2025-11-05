@@ -1,53 +1,71 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { MBTI_TYPES } from '@/lib/mbti';
 import { useVibe } from '@/app/providers';
 import { FaSpinner } from 'react-icons/fa6';
+import { fetchWithAuth } from '@/lib/auth-utils';
 
-// 轻量级、适合聊天的模型（OpenAI 兼容或代理到 openai 风格端点）
-const DEFAULT_MODELS = [
-  'gpt-4o-mini',            // OpenAI 轻量聊天
-  'gpt-4.1-nano',          // Nano 级成本
-  'gpt-4.1-mini',          // Mini 级性能/成本折中
-  'deepseek-v3.1',         // DeepSeek 轻量聊天
-  'deepseek-chat',         // DeepSeek 聊天稳定版
-  'qwen-turbo',            // 阿里通义 Turbo 级
-  'mistral-small-latest',  // Mistral 小型聊天
-  'llama-3-8b',            // Meta 小参数聊天
-  'yi-lightning',          // 零一万物轻量
-  'glm-4.5-flash',         // 智谱轻量快推
-];
+interface PersonaChatProps {
+  personaCode: string;
+  model: string;
+}
 
-export default function PersonaChat() {
+export default function PersonaChat({ personaCode: code, model }: PersonaChatProps) {
   const { mode } = useVibe();
-  const [code, setCode] = useState<string>('intj');
-  const [model, setModel] = useState<string>('gpt-4o');
-  const [customModel, setCustomModel] = useState<string>('');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false); // 发送消息加载
   const [personaLoading, setPersonaLoading] = useState(false); // 切换人格时加载
   const [messages, setMessages] = useState<Array<{ role: 'user'|'assistant'|'system'; content: string }>>([]);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { 
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+  }, [messages]);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token || !code) { setMessages([]); return; }
     setPersonaLoading(true);
-    fetch(`/api/persona/${code}/history`, { headers: { Authorization: `Bearer ${token}` } })
+    fetchWithAuth(`/api/persona/${code}/history`)
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!data?.items) { setMessages([]); return; }
-        const last = data.items[0];
-        setMessages(Array.isArray(last?.messages) ? last.messages : []);
+        if (!data?.items || data.items.length === 0) { 
+          setMessages([]); 
+          return; 
+        }
+        // 合并所有交互记录的消息，按时间顺序排列
+        const allMessages: Array<{ role: 'user'|'assistant'|'system'; content: string; createdAt?: Date }> = [];
+        
+        // 遍历所有交互记录，提取所有消息
+        data.items.forEach((interaction: any) => {
+          if (Array.isArray(interaction.messages)) {
+            interaction.messages.forEach((msg: any) => {
+              // 过滤掉system消息，只保留user和assistant的消息
+              if (msg.role !== 'system') {
+                allMessages.push({
+                  role: msg.role,
+                  content: msg.content,
+                  createdAt: msg.createdAt || interaction.createdAt || new Date(),
+                });
+              }
+            });
+          }
+        });
+        
+        // 按创建时间排序（从早到晚，显示完整聊天历史）
+        allMessages.sort((a, b) => {
+          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return timeA - timeB;
+        });
+        
+        setMessages(allMessages.map(m => ({ role: m.role, content: m.content })));
       })
       .catch(() => setMessages([]))
       .finally(() => setPersonaLoading(false));
   }, [code]);
-
-  const effectiveModel = (customModel || model).trim();
 
   const send = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -62,11 +80,15 @@ export default function PersonaChat() {
     const optimistic = [...messages, { role: 'user' as const, content: text }];
     setMessages(optimistic);
     setInput('');
+    // 重置textarea高度
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     try {
-      const res = await fetch(`/api/persona/${code}/chat`, {
+      const res = await fetchWithAuth(`/api/persona/${code}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: text, model: effectiveModel || undefined })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, model: model || undefined })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -86,54 +108,23 @@ export default function PersonaChat() {
     }
   };
 
-  return (
-    <div className="space-y-4">
-      {/* 顶部工具栏 */}
-      <div className="rounded-xl border p-3 sm:p-4 flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-          <div className="flex items-center gap-3">
-            <div className="text-lg font-semibold tracking-wide">聊天</div>
-            {personaLoading && (
-              <div className="flex items-center gap-2 text-sm opacity-80">
-                <FaSpinner className="animate-spin text-[var(--accent-cyan)]" />
-                <span>人格意识在思考中…</span>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 text-sm w-full">
-            <label className={`${mode === 'waibi' ? 'text-white opacity-70' : 'text-gray-900 opacity-100'}`}>人格</label>
-            <select
-              className={`w-full sm:w-auto rounded-md border px-2 py-2 sm:py-1 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] ${mode === 'waibi' ? 'bg-black text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'}`}
-              value={code}
-              onChange={(e)=>setCode(e.target.value)}
-            >
-              {MBTI_TYPES.map((p) => (
-                <option className={mode === 'waibi' ? 'bg-black text-white' : 'bg-white text-gray-900'} key={p.id} value={p.name.toLowerCase()}>{p.name}</option>
-              ))}
-            </select>
-            <label className={`ml-2 ${mode === 'waibi' ? 'text-white opacity-70' : 'text-gray-900 opacity-100'}`}>模型</label>
-            <select
-              className={`w-full sm:w-auto rounded-md border px-2 py-2 sm:py-1 focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] ${mode === 'waibi' ? 'bg-black text-white border-gray-700' : 'bg-white text-gray-900 border-gray-300'}`}
-              value={model}
-              onChange={(e)=>setModel(e.target.value)}
-            >
-              {DEFAULT_MODELS.map((m) => (
-                <option className={mode === 'waibi' ? 'bg-black text-white' : 'bg-white text-gray-900'} key={m} value={m}>{m}</option>
-              ))}
-              <option className={mode === 'waibi' ? 'bg-black text-white' : 'bg-white text-gray-900'} value="">自定义...</option>
-            </select>
-            <input
-              className={`w-full sm:w-auto min-w-[200px] rounded-md border px-3 py-2 sm:py-1 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyan)] ${mode === 'waibi' ? 'bg-black text-white border-gray-700 placeholder-gray-400' : 'bg-white text-gray-900 border-gray-300'}`}
-              placeholder="自定义模型名（留空则用上面选择）"
-              value={customModel}
-              onChange={(e)=>setCustomModel(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+  const chatBgClass = mode === 'waibi' 
+    ? 'bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950' 
+    : 'bg-gradient-to-b from-gray-50 via-white to-gray-50';
+  const inputClass = mode === 'waibi'
+    ? 'bg-gray-800/80 border-gray-700/50 text-white placeholder-gray-500'
+    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400';
+  const accentBtn = mode === 'waibi'
+    ? 'bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/20'
+    : 'bg-[var(--accent-cyan)] hover:brightness-110 shadow-md';
 
+  return (
+    <div className="flex flex-col h-full">
       {/* 消息区 */}
-      <div className="rounded-2xl border p-3 sm:p-4 max-h-[520px] overflow-y-auto space-y-3 bg-[color:color-mix(in_srgb,transparent_92%,currentColor_5%)]">
+      <div 
+        ref={messagesContainerRef}
+        className={`flex-1 overflow-y-auto ${chatBgClass} p-4 space-y-6`}
+      >
         {personaLoading && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm opacity-80">
             <FaSpinner className="animate-spin text-[var(--accent-cyan)]" />
@@ -142,28 +133,60 @@ export default function PersonaChat() {
         )}
 
         {!personaLoading && messages.length === 0 && (
-          <div className="text-center text-sm opacity-70 py-10">
-            还没有消息，先和 {code.toUpperCase()} 打个招呼吧～
+          <div className={`flex flex-col items-center justify-center h-full ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-600'}`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mb-4 ${
+              mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-600'
+            }`}>
+              {code.slice(0, 2).toUpperCase()}
+            </div>
+            <div className="text-2xl font-semibold mb-2">与 {code.toUpperCase()} 开始对话</div>
+            <div className="text-sm opacity-70">选择一个人格，开始你的对话之旅</div>
           </div>
         )}
 
         {!personaLoading && messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}>
-            <div className={`flex items-start gap-2 max-w-[80%] ${m.role==='user'?'flex-row-reverse':''}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${m.role==='user'?'bg-[var(--accent-cyan)] text-white':'bg-[var(--accent-purple)] text-white'}`}>
-                {m.role==='user'?'你':code.slice(0,2).toUpperCase()}
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+            <div className={`flex items-start gap-3 max-w-3xl ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 shadow-md ${
+                m.role === 'user' 
+                  ? mode === 'waibi'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-[var(--accent-cyan)] text-white'
+                  : mode === 'waibi'
+                    ? 'bg-[var(--accent-purple)] text-white'
+                    : 'bg-purple-500 text-white'
+              }`}>
+                {m.role === 'user' ? '你' : code.slice(0, 2).toUpperCase()}
               </div>
-              <div className={`px-3 py-2 rounded-2xl text-sm leading-relaxed shadow-sm border ${m.role==='user'?'bg-[color:color-mix(in_srgb,currentColor_10%,transparent)] border-current/10':'bg-[color:color-mix(in_srgb,currentColor_6%,transparent)] border-current/10'}`}>
-                <div className={`text-[10px] opacity-60 mb-1 ${m.role==='user'?'text-[var(--accent-cyan)]':'text-[var(--accent-purple)]'}`}>{m.role==='user'?'你':'人格'}</div>
-                <div className="whitespace-pre-wrap">{m.content}</div>
+              <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                m.role === 'user'
+                  ? mode === 'waibi'
+                    ? 'bg-green-500/25 text-white border border-green-500/30'
+                    : 'bg-blue-100 text-gray-900 border border-blue-200'
+                  : mode === 'waibi'
+                    ? 'bg-gray-800/80 text-gray-100 border border-gray-700/50'
+                    : 'bg-white border border-gray-200 text-gray-900'
+              }`}>
+                <div className="whitespace-pre-wrap break-words">{m.content}</div>
               </div>
             </div>
           </div>
         ))}
+
         {loading && (
-          <div className="flex items-center gap-2 text-sm opacity-80">
-            <div className="w-8 h-8 rounded-full bg-[var(--accent-purple)] text-white flex items-center justify-center">{code.slice(0,2).toUpperCase()}</div>
-            <div className="px-3 py-2 rounded-2xl border border-current/10 bg-[color:color-mix(in_srgb,currentColor_6%,transparent)]">
+          <div className="flex items-start gap-3 mb-4">
+            <div className={`w-9 h-9 rounded-full shadow-md flex items-center justify-center shrink-0 ${
+              mode === 'waibi' 
+                ? 'bg-[var(--accent-purple)] text-white' 
+                : 'bg-purple-500 text-white'
+            }`}>
+              {code.slice(0, 2).toUpperCase()}
+            </div>
+            <div className={`px-4 py-3 rounded-2xl shadow-sm ${
+              mode === 'waibi' 
+                ? 'bg-gray-800/80 border border-gray-700/50' 
+                : 'bg-white border border-gray-200'
+            }`}>
               <span className="inline-flex gap-1">
                 <span className="w-2 h-2 rounded-full bg-current/40 animate-bounce"></span>
                 <span className="w-2 h-2 rounded-full bg-current/40 animate-bounce [animation-delay:120ms]"></span>
@@ -176,18 +199,49 @@ export default function PersonaChat() {
       </div>
 
       {/* 输入区 */}
-      <form onSubmit={send} className="sticky bottom-2 flex items-center gap-2">
-        <input
-          className="flex-1 rounded-lg border border-current/30 bg-transparent px-3 py-2 text-sm shadow-sm"
-          placeholder={`向 ${code.toUpperCase()} 说点什么...`}
-          value={input}
-          onChange={(e)=>setInput(e.target.value)}
-          disabled={loading || personaLoading}
-        />
-        <button type="submit" className="px-4 h-10 rounded-lg text-white bg-[var(--accent-cyan)] hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed transition" disabled={loading || personaLoading || !input.trim()}>
-          {loading ? <FaSpinner className="animate-spin" /> : '发送'}
-        </button>
-      </form>
+      <div className={`border-t backdrop-blur-sm ${mode === 'waibi' ? 'border-green-500/20 bg-black/80' : 'border-gray-200 bg-white/95'} p-4`}>
+        <form onSubmit={send} className="max-w-3xl mx-auto flex items-end gap-3">
+          <div className="flex-1 relative">
+            <textarea
+              ref={textareaRef}
+              className={`w-full rounded-xl border px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 overflow-y-auto transition-all ${
+                mode === 'waibi'
+                  ? 'focus:ring-green-500/50 ' + inputClass
+                  : 'focus:ring-[var(--accent-cyan)] ' + inputClass
+              }`}
+              placeholder={`向 ${code.toUpperCase()} 说点什么...`}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // 自动调整高度
+                if (textareaRef.current) {
+                  textareaRef.current.style.height = 'auto';
+                  textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  send(e);
+                }
+              }}
+              rows={1}
+              disabled={loading || personaLoading}
+              style={{ minHeight: '48px', maxHeight: '200px' }}
+            />
+          </div>
+          <button
+            type="submit"
+            className={`px-6 h-12 rounded-xl text-white ${accentBtn} disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center shrink-0 font-medium hover:scale-105 active:scale-95`}
+            disabled={loading || personaLoading || !input.trim()}
+          >
+            {loading ? <FaSpinner className="animate-spin" /> : '发送'}
+          </button>
+        </form>
+        <div className={`text-xs text-center mt-2 ${mode === 'waibi' ? 'text-gray-500' : 'text-gray-400'}`}>
+          按 Enter 发送，Shift + Enter 换行
+        </div>
+      </div>
     </div>
   );
 }
