@@ -14,8 +14,6 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [rotation, setRotation] = useState(0);
-  const [scale, setScale] = useState(1);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -57,33 +55,41 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
       return;
     }
 
-    // 计算图像尺寸以适应canvas
+    // 计算图像尺寸以适应裁剪框（保持宽高比，覆盖整个区域）
     const imageAspect = image.width / image.height;
-    let drawWidth = canvasSize * 0.8 * scale;
-    let drawHeight = canvasSize * 0.8 * scale;
+    const cropSize = outputSize;
+    let drawWidth = cropSize;
+    let drawHeight = cropSize;
     
     if (imageAspect > 1) {
-      drawHeight = drawWidth / imageAspect;
+      // 横向图片，高度固定，宽度按比例
+      drawHeight = cropSize;
+      drawWidth = cropSize * imageAspect;
     } else {
-      drawWidth = drawHeight * imageAspect;
+      // 纵向或正方形图片，宽度固定，高度按比例
+      drawWidth = cropSize;
+      drawHeight = cropSize / imageAspect;
     }
 
-    ctx.save();
-    ctx.translate(canvasSize / 2, canvasSize / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(offsetX, offsetY);
+    // 绘制图片（居中，允许拖拽调整位置）
+    const centerX = canvasSize / 2 + offsetX;
+    const centerY = canvasSize / 2 + offsetY;
     
-    ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
-    ctx.restore();
+    ctx.drawImage(
+      image,
+      centerX - drawWidth / 2,
+      centerY - drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
 
     // 绘制裁剪框
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 2;
-    const cropSize = outputSize;
     const cropX = (canvasSize - cropSize) / 2;
     const cropY = (canvasSize - cropSize) / 2;
     ctx.strokeRect(cropX, cropY, cropSize, cropSize);
-  }, [image, rotation, scale, offsetX, offsetY, mode]);
+  }, [image, offsetX, offsetY, mode]);
 
   useEffect(() => {
     drawCanvas();
@@ -103,8 +109,6 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
       const img = new Image();
       img.onload = () => {
         setImage(img);
-        setScale(1);
-        setRotation(0);
         setOffsetX(0);
         setOffsetY(0);
       };
@@ -144,10 +148,6 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
     setIsDragging(false);
   };
 
-  const rotateLeft = () => setRotation((prev) => prev - 90);
-  const rotateRight = () => setRotation((prev) => prev + 90);
-  const zoomIn = () => setScale((prev) => Math.min(prev * 1.2, 3));
-  const zoomOut = () => setScale((prev) => Math.max(prev / 1.2, 0.5));
 
   const handleSave = async () => {
     if (!image) {
@@ -161,34 +161,35 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
     const ctx = outputCanvas.getContext('2d');
     if (!ctx) return;
 
-    // 计算图像在预览canvas中的尺寸
+    // 计算图像尺寸（与预览canvas中相同）
     const imageAspect = image.width / image.height;
-    let previewWidth = canvasSize * 0.8 * scale;
-    let previewHeight = canvasSize * 0.8 * scale;
+    const cropSize = outputSize;
+    let drawWidth = cropSize;
+    let drawHeight = cropSize;
     
     if (imageAspect > 1) {
-      previewHeight = previewWidth / imageAspect;
+      drawHeight = cropSize;
+      drawWidth = cropSize * imageAspect;
     } else {
-      previewWidth = previewHeight * imageAspect;
+      drawWidth = cropSize;
+      drawHeight = cropSize / imageAspect;
     }
 
-    // 计算在输出canvas中的尺寸（保持比例）
-    const scaleRatio = outputSize / (canvasSize * 0.8);
-    let outputWidth = previewWidth * scaleRatio;
-    let outputHeight = previewHeight * scaleRatio;
+    // 计算偏移量（从预览canvas映射到输出canvas，比例1:1）
+    const outputOffsetX = offsetX;
+    const outputOffsetY = offsetY;
 
-    // 计算偏移量（从预览canvas映射到输出canvas）
-    const offsetRatio = outputSize / (canvasSize * 0.8);
-    const outputOffsetX = offsetX * offsetRatio;
-    const outputOffsetY = offsetY * offsetRatio;
-
-    ctx.save();
-    ctx.translate(outputSize / 2, outputSize / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(outputOffsetX, outputOffsetY);
+    // 绘制图片（居中+偏移）
+    const centerX = outputSize / 2 + outputOffsetX;
+    const centerY = outputSize / 2 + outputOffsetY;
     
-    ctx.drawImage(image, -outputWidth / 2, -outputHeight / 2, outputWidth, outputHeight);
-    ctx.restore();
+    ctx.drawImage(
+      image,
+      centerX - drawWidth / 2,
+      centerY - drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
 
     const imageData = outputCanvas.toDataURL('image/png');
     await onSave(imageData);
@@ -229,19 +230,8 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
           />
         </div>
 
-        <div className="mb-4 flex gap-2 justify-center flex-wrap">
-          <button onClick={rotateLeft} className={`px-3 py-2 rounded ${inputClass}`}>
-            左旋转
-          </button>
-          <button onClick={rotateRight} className={`px-3 py-2 rounded ${inputClass}`}>
-            右旋转
-          </button>
-          <button onClick={zoomIn} className={`px-3 py-2 rounded ${inputClass}`}>
-            放大
-          </button>
-          <button onClick={zoomOut} className={`px-3 py-2 rounded ${inputClass}`}>
-            缩小
-          </button>
+        <div className="mb-4 text-center text-sm opacity-70">
+          拖拽图片调整位置，对齐绿色框
         </div>
 
         <div className="flex gap-2 justify-end">
