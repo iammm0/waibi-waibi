@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import React from "react";
+import { UniverseToastContainer } from "@/components/universe-toast";
+import { UniverseConfirmContainer } from "@/components/universe-confirm";
 
 export const metadata: Metadata = {
     title: "Waibi 宇宙",
@@ -25,6 +27,8 @@ export default function RootLayout({
         <body>
         <Providers initialMode="waibi">
             {children}
+            <UniverseToastContainer />
+            <UniverseConfirmContainer />
         </Providers>
         </body>
         </html>
