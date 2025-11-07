@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 import SectionHeader from '@/components/section-header';
 import { useVibe } from '@/app/providers';
 import ModelParameters from '@/components/model-parameters';
@@ -27,6 +28,7 @@ interface TrainingSample {
 
 export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const persona = getPersonalityById(id);
   const { mode } = useVibe();
 
@@ -189,13 +191,13 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
             console.error('删除服务器训练样本失败');
             // 如果删除失败，恢复本地状态
             setTrainingSamples(originalSamples);
-            alert('删除失败，请重试');
+            universeToast.error('删除失败，请重试');
           }
         } catch (err) {
           console.error('删除训练样本失败:', err);
           // 如果删除失败，恢复本地状态
           setTrainingSamples(originalSamples);
-          alert('删除失败，请重试');
+          universeToast.error('删除失败，请重试');
         }
       }
     }
@@ -232,7 +234,11 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
-      <SectionHeader title={`${persona?.name || '人格'} 训练中心`} subtitle={persona?.description || ''} />
+      <SectionHeader 
+        icon="🎯"
+        title={`${persona?.name || '人格'} 训练中心`} 
+        subtitle={persona?.description ? (persona.description.length > 50 ? persona.description.slice(0, 50) + '...' : persona.description) : ''} 
+      />
 
       {/* 操作提示 */}
       <div className={`rounded-xl shadow-md p-4 mt-6 mb-6 ${panelClass}`}>
@@ -362,7 +368,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
                 onClick={() => {
                   const code = persona?.name?.toLowerCase();
                   if (code) {
-                    window.location.href = `/persona-instance/create?persona=${code}`;
+                    router.push(`/persona-instance/create?persona=${code}`);
                   }
                 }}
                 className={`w-full py-3 rounded-lg text-white ${accentBtn}`}
