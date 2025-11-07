@@ -16,12 +16,58 @@ type Me = {
     email?: string; 
     phone?: string; 
     avatarUrl?: string;
+    bio?: string;
+    birthday?: string | Date;
+    gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+    location?: string;
+    occupation?: string;
+    company?: string;
+    interests?: string[];
+    website?: string;
+    socialLinks?: {
+      github?: string;
+      twitter?: string;
+      linkedin?: string;
+      instagram?: string;
+      weibo?: string;
+      douban?: string;
+      bilibili?: string;
+      custom?: { name: string; url: string }[];
+    };
+    education?: {
+      school?: string;
+      major?: string;
+      degree?: string;
+      graduationYear?: number;
+    }[];
+    skills?: string[];
+    tags?: string[];
+    signature?: string;
+    mbtiType?: string;
+    languages?: string[];
+    about?: string;
     profileVisibility?: {
       email?: 'public' | 'private';
       phone?: 'public' | 'private';
       username?: 'public' | 'private';
       avatarUrl?: 'public' | 'private';
       name?: 'public' | 'private';
+      bio?: 'public' | 'private';
+      birthday?: 'public' | 'private';
+      gender?: 'public' | 'private';
+      location?: 'public' | 'private';
+      occupation?: 'public' | 'private';
+      company?: 'public' | 'private';
+      interests?: 'public' | 'private';
+      website?: 'public' | 'private';
+      socialLinks?: 'public' | 'private';
+      education?: 'public' | 'private';
+      skills?: 'public' | 'private';
+      tags?: 'public' | 'private';
+      signature?: 'public' | 'private';
+      mbtiType?: 'public' | 'private';
+      languages?: 'public' | 'private';
+      about?: 'public' | 'private';
     };
   } 
 };
@@ -59,17 +105,69 @@ export default function MePage() {
   const [selectedPersonaFilter, setSelectedPersonaFilter] = useState<string>('all'); // 人格筛选：'all' 或具体人格代码
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
+  const [personaInstances, setPersonaInstances] = useState<any[]>([]);
+  const [loadingInstances, setLoadingInstances] = useState(false);
   const [editForm, setEditForm] = useState({
     username: '',
     name: '',
     email: '',
     phone: '',
+    bio: '',
+    birthday: '',
+    gender: '' as 'male' | 'female' | 'other' | 'prefer_not_to_say' | '',
+    location: '',
+    occupation: '',
+    company: '',
+    interests: [] as string[],
+    website: '',
+    socialLinks: {
+      github: '' as string | undefined,
+      twitter: '' as string | undefined,
+      linkedin: '' as string | undefined,
+      instagram: '' as string | undefined,
+      weibo: '' as string | undefined,
+      douban: '' as string | undefined,
+      bilibili: '' as string | undefined,
+      custom: [] as { name: string; url: string }[] | undefined,
+    } as {
+      github?: string;
+      twitter?: string;
+      linkedin?: string;
+      instagram?: string;
+      weibo?: string;
+      douban?: string;
+      bilibili?: string;
+      custom?: { name: string; url: string }[];
+    },
+    education: [] as { school?: string; major?: string; degree?: string; graduationYear?: number }[],
+    skills: [] as string[],
+    tags: [] as string[],
+    signature: '',
+    mbtiType: '',
+    languages: [] as string[],
+    about: '',
     profileVisibility: {
       email: 'private' as 'public' | 'private',
       phone: 'private' as 'public' | 'private',
       username: 'public' as 'public' | 'private',
       avatarUrl: 'public' as 'public' | 'private',
       name: 'public' as 'public' | 'private',
+      bio: 'private' as 'public' | 'private',
+      birthday: 'private' as 'public' | 'private',
+      gender: 'private' as 'public' | 'private',
+      location: 'private' as 'public' | 'private',
+      occupation: 'private' as 'public' | 'private',
+      company: 'private' as 'public' | 'private',
+      interests: 'private' as 'public' | 'private',
+      website: 'private' as 'public' | 'private',
+      socialLinks: 'private' as 'public' | 'private',
+      education: 'private' as 'public' | 'private',
+      skills: 'private' as 'public' | 'private',
+      tags: 'private' as 'public' | 'private',
+      signature: 'private' as 'public' | 'private',
+      mbtiType: 'private' as 'public' | 'private',
+      languages: 'private' as 'public' | 'private',
+      about: 'private' as 'public' | 'private',
     },
   });
 
@@ -122,9 +220,25 @@ export default function MePage() {
     }
   };
 
+  const fetchPersonaInstances = async () => {
+    setLoadingInstances(true);
+    try {
+      const res = await fetchWithAuth('/api/persona-instance');
+      if (res.ok) {
+        const data = await res.json();
+        setPersonaInstances(data.instances || []);
+      }
+    } catch (err) {
+      console.error('获取模型实例失败:', err);
+    } finally {
+      setLoadingInstances(false);
+    }
+  };
+
   useEffect(() => { 
     fetchMe();
     fetchSubscription();
+    fetchPersonaInstances();
   }, []);
 
   useEffect(() => {
@@ -135,17 +249,64 @@ export default function MePage() {
 
   useEffect(() => {
     if (me) {
+      const birthdayStr = me.birthday 
+        ? (typeof me.birthday === 'string' 
+          ? me.birthday.split('T')[0] 
+          : new Date(me.birthday).toISOString().split('T')[0])
+        : '';
+      
       setEditForm({
         username: me.username || '',
         name: me.name || '',
         email: me.email || '',
         phone: me.phone || '',
+        bio: me.bio || '',
+        birthday: birthdayStr,
+        gender: me.gender || '',
+        location: me.location || '',
+        occupation: me.occupation || '',
+        company: me.company || '',
+        interests: me.interests || [],
+        website: me.website || '',
+        socialLinks: me.socialLinks || {
+          github: undefined,
+          twitter: undefined,
+          linkedin: undefined,
+          instagram: undefined,
+          weibo: undefined,
+          douban: undefined,
+          bilibili: undefined,
+          custom: undefined,
+        },
+        education: me.education || [],
+        skills: me.skills || [],
+        tags: me.tags || [],
+        signature: me.signature || '',
+        mbtiType: me.mbtiType || '',
+        languages: me.languages || [],
+        about: me.about || '',
         profileVisibility: {
           email: me.profileVisibility?.email || 'private',
           phone: me.profileVisibility?.phone || 'private',
           username: me.profileVisibility?.username || 'public',
           avatarUrl: me.profileVisibility?.avatarUrl || 'public',
           name: me.profileVisibility?.name || 'public',
+          bio: me.profileVisibility?.bio || 'private',
+          birthday: me.profileVisibility?.birthday || 'private',
+          gender: me.profileVisibility?.gender || 'private',
+          location: me.profileVisibility?.location || 'private',
+          occupation: me.profileVisibility?.occupation || 'private',
+          company: me.profileVisibility?.company || 'private',
+          interests: me.profileVisibility?.interests || 'private',
+          website: me.profileVisibility?.website || 'private',
+          socialLinks: me.profileVisibility?.socialLinks || 'private',
+          education: me.profileVisibility?.education || 'private',
+          skills: me.profileVisibility?.skills || 'private',
+          tags: me.profileVisibility?.tags || 'private',
+          signature: me.profileVisibility?.signature || 'private',
+          mbtiType: me.profileVisibility?.mbtiType || 'private',
+          languages: me.profileVisibility?.languages || 'private',
+          about: me.profileVisibility?.about || 'private',
         },
       });
     }
@@ -423,6 +584,591 @@ export default function MePage() {
                   <label className="text-xs">公开</label>
                 </div>
               </div>
+              
+              {/* 个人简介 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">个人简介</label>
+                <textarea
+                  value={editForm.bio}
+                  onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  rows={3}
+                  placeholder="简短介绍自己..."
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.bio === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        bio: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 生日 */}
+              <div>
+                <label className="block text-sm mb-2">生日</label>
+                <input
+                  type="date"
+                  value={editForm.birthday}
+                  onChange={(e) => setEditForm({ ...editForm, birthday: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.birthday === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        birthday: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 性别 */}
+              <div>
+                <label className="block text-sm mb-2">性别</label>
+                <select
+                  value={editForm.gender}
+                  onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as any })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                >
+                  <option value="">不公开</option>
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                  <option value="other">其他</option>
+                  <option value="prefer_not_to_say">不愿透露</option>
+                </select>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.gender === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        gender: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 所在地 */}
+              <div>
+                <label className="block text-sm mb-2">所在地</label>
+                <input
+                  type="text"
+                  value={editForm.location}
+                  onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="例如: 北京"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.location === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        location: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 职业 */}
+              <div>
+                <label className="block text-sm mb-2">职业</label>
+                <input
+                  type="text"
+                  value={editForm.occupation}
+                  onChange={(e) => setEditForm({ ...editForm, occupation: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="例如: 软件工程师"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.occupation === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        occupation: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 公司 */}
+              <div>
+                <label className="block text-sm mb-2">公司</label>
+                <input
+                  type="text"
+                  value={editForm.company}
+                  onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="公司名称"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.company === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        company: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 个人网站 */}
+              <div>
+                <label className="block text-sm mb-2">个人网站</label>
+                <input
+                  type="url"
+                  value={editForm.website}
+                  onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="https://..."
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.website === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        website: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* MBTI类型 */}
+              <div>
+                <label className="block text-sm mb-2">MBTI类型</label>
+                <select
+                  value={editForm.mbtiType}
+                  onChange={(e) => setEditForm({ ...editForm, mbtiType: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                >
+                  <option value="">未选择</option>
+                  {MBTI_TYPES.map((type) => (
+                    <option key={type.name} value={type.name}>
+                      {type.name} - {type.description}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.mbtiType === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        mbtiType: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 兴趣爱好 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">兴趣爱好 (用逗号分隔)</label>
+                <input
+                  type="text"
+                  value={editForm.interests.join(', ')}
+                  onChange={(e) => setEditForm({
+                    ...editForm,
+                    interests: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                  })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="例如: 阅读, 旅行, 摄影"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.interests === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        interests: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 技能 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">技能 (用逗号分隔)</label>
+                <input
+                  type="text"
+                  value={editForm.skills.join(', ')}
+                  onChange={(e) => setEditForm({
+                    ...editForm,
+                    skills: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                  })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="例如: JavaScript, Python, 设计"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.skills === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        skills: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 语言 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">语言 (用逗号分隔)</label>
+                <input
+                  type="text"
+                  value={editForm.languages.join(', ')}
+                  onChange={(e) => setEditForm({
+                    ...editForm,
+                    languages: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                  })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="例如: 中文, 英语, 日语"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.languages === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        languages: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 个人标签 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">个人标签 (用逗号分隔)</label>
+                <input
+                  type="text"
+                  value={editForm.tags.join(', ')}
+                  onChange={(e) => setEditForm({
+                    ...editForm,
+                    tags: e.target.value.split(',').map(s => s.trim()).filter(s => s),
+                  })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="例如: 技术爱好者, 旅行者, 美食家"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.tags === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        tags: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 个性签名 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">个性签名</label>
+                <input
+                  type="text"
+                  value={editForm.signature}
+                  onChange={(e) => setEditForm({ ...editForm, signature: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  placeholder="一句话介绍自己"
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.signature === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        signature: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 关于我 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">关于我</label>
+                <textarea
+                  value={editForm.about}
+                  onChange={(e) => setEditForm({ ...editForm, about: e.target.value })}
+                  className={`w-full p-2 rounded-lg ${inputClass}`}
+                  rows={5}
+                  placeholder="详细介绍自己..."
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.about === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        about: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 社交媒体链接 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">社交媒体链接</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs mb-1">GitHub</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.github || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), github: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://github.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Twitter</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.twitter || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), twitter: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">LinkedIn</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.linkedin || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), linkedin: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://linkedin.com/in/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Instagram</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.instagram || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), instagram: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">微博</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.weibo || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), weibo: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://weibo.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">豆瓣</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.douban || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), douban: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://douban.com/people/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Bilibili</label>
+                    <input
+                      type="url"
+                      value={editForm.socialLinks?.bilibili || ''}
+                      onChange={(e) => setEditForm({
+                        ...editForm,
+                        socialLinks: { ...(editForm.socialLinks || {}), bilibili: e.target.value || undefined },
+                      })}
+                      className={`w-full p-2 rounded-lg ${inputClass}`}
+                      placeholder="https://bilibili.com/..."
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.socialLinks === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        socialLinks: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
+
+              {/* 教育背景 */}
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-2">教育背景</label>
+                {editForm.education.map((edu, index) => (
+                  <div key={index} className={`p-3 rounded-lg mb-2 ${mode === 'waibi' ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={edu.school || ''}
+                        onChange={(e) => {
+                          const newEdu = [...editForm.education];
+                          newEdu[index] = { ...newEdu[index], school: e.target.value };
+                          setEditForm({ ...editForm, education: newEdu });
+                        }}
+                        className={`p-2 rounded-lg ${inputClass}`}
+                        placeholder="学校"
+                      />
+                      <input
+                        type="text"
+                        value={edu.major || ''}
+                        onChange={(e) => {
+                          const newEdu = [...editForm.education];
+                          newEdu[index] = { ...newEdu[index], major: e.target.value };
+                          setEditForm({ ...editForm, education: newEdu });
+                        }}
+                        className={`p-2 rounded-lg ${inputClass}`}
+                        placeholder="专业"
+                      />
+                      <input
+                        type="text"
+                        value={edu.degree || ''}
+                        onChange={(e) => {
+                          const newEdu = [...editForm.education];
+                          newEdu[index] = { ...newEdu[index], degree: e.target.value };
+                          setEditForm({ ...editForm, education: newEdu });
+                        }}
+                        className={`p-2 rounded-lg ${inputClass}`}
+                        placeholder="学位"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={edu.graduationYear || ''}
+                          onChange={(e) => {
+                            const newEdu = [...editForm.education];
+                            newEdu[index] = { ...newEdu[index], graduationYear: parseInt(e.target.value) || undefined };
+                            setEditForm({ ...editForm, education: newEdu });
+                          }}
+                          className={`flex-1 p-2 rounded-lg ${inputClass}`}
+                          placeholder="毕业年份"
+                        />
+                        <button
+                          onClick={() => {
+                            const newEdu = editForm.education.filter((_, i) => i !== index);
+                            setEditForm({ ...editForm, education: newEdu });
+                          }}
+                          className={`px-3 py-2 rounded-lg ${mode === 'waibi' ? 'text-red-400 hover:bg-red-500/20' : 'text-red-600 hover:bg-red-50'}`}
+                        >
+                          删除
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setEditForm({
+                    ...editForm,
+                    education: [...editForm.education, { school: '', major: '', degree: '', graduationYear: undefined }],
+                  })}
+                  className={`mt-2 px-3 py-2 rounded-lg text-sm ${secondaryBtn}`}
+                >
+                  + 添加教育经历
+                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={editForm.profileVisibility.education === 'public'}
+                    onChange={(e) => setEditForm({
+                      ...editForm,
+                      profileVisibility: {
+                        ...editForm.profileVisibility,
+                        education: e.target.checked ? 'public' : 'private',
+                      },
+                    })}
+                  />
+                  <label className="text-xs">公开</label>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button
@@ -434,14 +1180,18 @@ export default function MePage() {
                       body: JSON.stringify(editForm),
                     });
                     if (res.ok) {
+                      const data = await res.json();
                       await fetchMe();
                       setIsEditing(false);
                       alert('保存成功');
                     } else {
-                      alert('保存失败');
+                      const errorData = await res.json().catch(() => ({ message: '保存失败' }));
+                      console.error('保存失败:', errorData);
+                      alert(`保存失败: ${errorData.message || '未知错误'}`);
                     }
-                  } catch (err) {
-                    alert('保存失败');
+                  } catch (err: any) {
+                    console.error('保存失败:', err);
+                    alert(`保存失败: ${err.message || '网络错误'}`);
                   }
                 }}
                 className={`flex-1 px-4 py-2 rounded-lg text-white ${accentBtn}`}
@@ -538,6 +1288,131 @@ export default function MePage() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* 模型实例管理 */}
+      <div className={`rounded-xl shadow-md p-4 sm:p-6 mt-6 ${panelClass}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-semibold">模型实例管理</h2>
+          <button
+            onClick={() => router.push('/persona-instance/create')}
+            className={`px-4 py-2 rounded-lg text-white text-sm ${accentBtn}`}
+          >
+            + 创建新实例
+          </button>
+        </div>
+        {loadingInstances ? (
+          <div className={`text-center py-8 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+            加载中...
+          </div>
+        ) : personaInstances.length === 0 ? (
+          <div className={`text-center py-8 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className="text-sm mb-4">还没有创建任何模型实例</div>
+            <button
+              onClick={() => router.push('/persona-instance/create')}
+              className={`px-4 py-2 rounded-lg text-white ${accentBtn}`}
+            >
+              立即创建
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {personaInstances.map((instance) => (
+              <div
+                key={instance._id}
+                className={`p-4 rounded-lg border ${
+                  mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg mb-1">{instance.name}</h3>
+                    {instance.description && (
+                      <p className={`text-sm mb-2 ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {instance.description}
+                      </p>
+                    )}
+                  </div>
+                  {instance.avatarUrl && (
+                    <img
+                      src={instance.avatarUrl}
+                      alt={instance.name}
+                      className="w-12 h-12 rounded-full object-cover ml-2"
+                    />
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {instance.personaCode && (
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {instance.personaCode.toUpperCase()}
+                    </span>
+                  )}
+                  {instance.isPublic && (
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      mode === 'waibi' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      公开
+                    </span>
+                  )}
+                  {instance.isTrained && (
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      mode === 'waibi' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      已训练
+                    </span>
+                  )}
+                </div>
+                {instance.tags && instance.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {instance.tags.map((tag: string, index: number) => (
+                      <span
+                        key={index}
+                        className={`px-2 py-0.5 rounded text-xs ${
+                          mode === 'waibi' ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => router.push(`/persona-instance/${instance._id}`)}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm text-white ${accentBtn}`}
+                  >
+                    查看详情
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!confirm('确定要删除这个模型实例吗？')) return;
+                      try {
+                        const res = await fetchWithAuth(`/api/persona-instance/${instance._id}`, {
+                          method: 'DELETE',
+                        });
+                        if (res.ok) {
+                          await fetchPersonaInstances();
+                          alert('删除成功');
+                        } else {
+                          alert('删除失败');
+                        }
+                      } catch (err) {
+                        alert('删除失败');
+                      }
+                    }}
+                    className={`px-3 py-2 rounded-lg text-sm ${
+                      mode === 'waibi' ? 'text-red-400 hover:bg-red-500/20' : 'text-red-600 hover:bg-red-50'
+                    }`}
+                  >
+                    删除
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 训练集管理 */}

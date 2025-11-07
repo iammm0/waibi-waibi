@@ -60,6 +60,55 @@ export async function GET(
     if (visibility.phone === 'public' || isOwnProfile) {
       publicProfile.phone = user.phone;
     }
+    // 新增的个人信息字段
+    if ((visibility.bio === 'public' || isOwnProfile) && user.bio) {
+      publicProfile.bio = user.bio;
+    }
+    if ((visibility.birthday === 'public' || isOwnProfile) && user.birthday) {
+      publicProfile.birthday = user.birthday;
+    }
+    if ((visibility.gender === 'public' || isOwnProfile) && user.gender) {
+      publicProfile.gender = user.gender;
+    }
+    if ((visibility.location === 'public' || isOwnProfile) && user.location) {
+      publicProfile.location = user.location;
+    }
+    if ((visibility.occupation === 'public' || isOwnProfile) && user.occupation) {
+      publicProfile.occupation = user.occupation;
+    }
+    if ((visibility.company === 'public' || isOwnProfile) && user.company) {
+      publicProfile.company = user.company;
+    }
+    if ((visibility.interests === 'public' || isOwnProfile) && user.interests) {
+      publicProfile.interests = user.interests;
+    }
+    if ((visibility.website === 'public' || isOwnProfile) && user.website) {
+      publicProfile.website = user.website;
+    }
+    if ((visibility.socialLinks === 'public' || isOwnProfile) && user.socialLinks) {
+      publicProfile.socialLinks = user.socialLinks;
+    }
+    if ((visibility.education === 'public' || isOwnProfile) && user.education) {
+      publicProfile.education = user.education;
+    }
+    if ((visibility.skills === 'public' || isOwnProfile) && user.skills) {
+      publicProfile.skills = user.skills;
+    }
+    if ((visibility.tags === 'public' || isOwnProfile) && user.tags) {
+      publicProfile.tags = user.tags;
+    }
+    if ((visibility.signature === 'public' || isOwnProfile) && user.signature) {
+      publicProfile.signature = user.signature;
+    }
+    if ((visibility.mbtiType === 'public' || isOwnProfile) && user.mbtiType) {
+      publicProfile.mbtiType = user.mbtiType;
+    }
+    if ((visibility.languages === 'public' || isOwnProfile) && user.languages) {
+      publicProfile.languages = user.languages;
+    }
+    if ((visibility.about === 'public' || isOwnProfile) && user.about) {
+      publicProfile.about = user.about;
+    }
 
     return NextResponse.json({ user: publicProfile, isOwn: isOwnProfile });
   } catch (error) {
