@@ -36,6 +36,8 @@ interface PersonaInstance extends Document {
     developmentLevel?: number; // 开发层级（1=原创, 2=二次开发, 3=三次开发等）
     originalUserId?: string; // 原始作者ID
     originalUserName?: string; // 原始作者名称（用于显示）
+    developerUserId?: string; // 二创作者ID（当前开发者）
+    developerUserName?: string; // 二创作者名称（当前开发者）
     forkChain?: string[]; // 开发链（记录所有开发层级的实例ID）
     createdAt: Date;
     updatedAt: Date;
@@ -81,6 +83,8 @@ const personaInstanceSchema = new Schema<PersonaInstance>({
     developmentLevel: { type: Number, default: 1 }, // 开发层级（1=原创, 2=二次开发, 3=三次开发等）
     originalUserId: { type: String, index: true, sparse: true }, // 原始作者ID
     originalUserName: { type: String }, // 原始作者名称
+    developerUserId: { type: String, index: true, sparse: true }, // 二创作者ID（当前开发者）
+    developerUserName: { type: String }, // 二创作者名称（当前开发者）
     forkChain: [String], // 开发链（记录所有开发层级的实例ID）
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },

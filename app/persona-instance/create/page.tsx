@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import SectionHeader from '@/components/section-header';
 import { useVibe } from '@/app/providers';
 import ModelParameters from '@/components/model-parameters';
 import { MBTI_TYPES } from '@/lib/mbti';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import AvatarEditor from '@/components/avatar-editor';
+import { universeToast } from '@/components/universe-toast';
 
 export interface ModelParams {
   temperature: number;
@@ -26,10 +27,13 @@ interface TrainingSample {
 
 export default function PersonaInstanceCreatePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { mode } = useVibe();
   const [step, setStep] = useState(1); // 1: 选择类型, 2: 基本信息, 3: 提示词, 4: 训练样本, 5: 模型参数
-  const [instanceType, setInstanceType] = useState<'blank' | 'persona'>('blank');
+  const [instanceType, setInstanceType] = useState<'blank' | 'persona' | 'template'>('blank');
   const [selectedPersona, setSelectedPersona] = useState<string>('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [forkedInstances, setForkedInstances] = useState<any[]>([]); // 收藏的模型实例列表
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -56,6 +60,94 @@ export default function PersonaInstanceCreatePage() {
   const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
   const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
   const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+
+  // 检查URL参数，如果有template参数，加载模板
+  useEffect(() => {
+    const templateId = searchParams?.get('template');
+    if (templateId) {
+      setInstanceType('template');
+      setSelectedTemplateId(templateId);
+      // 加载模板数据
+      fetchWithAuth(`/api/persona-instance/${templateId}`)
+        .then(async (r) => {
+          if (r.ok) {
+            const data = await r.json();
+            if (data.instance) {
+              setName(data.instance.name || '');
+              setDescription(data.instance.description || '');
+              setSystemPrompt(data.instance.systemPrompt || '');
+              setTrainingSamples(data.instance.trainingSamples || []);
+              setModelParams(data.instance.modelParams || {
+                temperature: 0.7,
+                topP: 0.9,
+                topK: 50,
+                maxTokens: 200,
+                epochs: 3,
+                learningRate: 0.001
+              });
+              setAvatarUrl(data.instance.avatarUrl || '');
+              setTags(data.instance.tags || []);
+              setStep(2); // 跳转到基本信息步骤
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('加载模板失败:', err);
+        });
+    }
+  }, [searchParams]);
+
+  // 检查URL参数，如果有persona参数，自动选择人格并加载训练集
+  useEffect(() => {
+    const personaCode = searchParams?.get('persona');
+    if (personaCode) {
+      setInstanceType('persona');
+      setSelectedPersona(personaCode);
+      // 加载该人格的训练集
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      if (token) {
+        fetchWithAuth(`/api/persona/${personaCode.toLowerCase()}/training`)
+          .then(async (r) => {
+            if (r.ok) {
+              const data = await r.json();
+              if (data.items && data.items.length > 0) {
+                // 转换为前端需要的格式
+                const samples = data.items.map((item: any) => ({
+                  input: item.input || '',
+                  response: item.response || '',
+                  scenario: item.scenario || undefined,
+                }));
+                setTrainingSamples(samples);
+              }
+            }
+          })
+          .catch((err) => {
+            console.error('加载训练集失败:', err);
+          });
+      }
+    }
+  }, [searchParams]);
+
+  // 加载收藏的模型实例列表
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (token) {
+      fetchWithAuth('/api/persona-instance')
+        .then(async (r) => {
+          if (r.ok) {
+            const data = await r.json();
+            if (data.instances) {
+              // 只显示收藏的实例（isForked === true）
+              const forked = data.instances.filter((inst: any) => inst.isForked === true);
+              setForkedInstances(forked);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error('加载收藏实例失败:', err);
+        });
+    }
+  }, []);
 
   // 当选择预制人格时，通过API加载提示词
   useEffect(() => {
@@ -109,7 +201,7 @@ export default function PersonaInstanceCreatePage() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      alert('请输入实例名称');
+      universeToast.warning('请输入实例名称');
       return;
     }
 
@@ -128,21 +220,23 @@ export default function PersonaInstanceCreatePage() {
           avatarUrl: avatarUrl.trim(),
           tags,
           isPublic,
-          isTrainingSetPublic
+          isTrainingSetPublic,
+          // 如果基于收藏模型创建，传递模板ID
+          templateInstanceId: instanceType === 'template' ? selectedTemplateId : null
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        alert('创建成功！');
+        universeToast.success('创建成功！');
         router.push(`/persona-instance/${data.instance._id}`);
       } else {
         const errorData = await res.json().catch(() => ({ message: '创建失败' }));
-        alert(`创建失败: ${errorData.message || '未知错误'}`);
+        universeToast.error(`创建失败: ${errorData.message || '未知错误'}`);
       }
     } catch (err: any) {
       console.error('创建失败:', err);
-      alert(`创建失败: ${err.message || '网络错误'}`);
+      universeToast.error(`创建失败: ${err.message || '网络错误'}`);
     } finally {
       setSaving(false);
     }
@@ -151,6 +245,7 @@ export default function PersonaInstanceCreatePage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader
+        icon="✨"
         title="创建人格模型实例"
         subtitle="创建一个全新的人格模型实例，可以是空白模板或基于预制人格"
       />
@@ -200,11 +295,12 @@ export default function PersonaInstanceCreatePage() {
         {step === 1 && (
           <div className="space-y-6">
             <h3 className="text-xl font-semibold mb-4">选择创建类型</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <button
                 onClick={() => {
                   setInstanceType('blank');
                   setSelectedPersona('');
+                  setSelectedTemplateId('');
                 }}
                 className={`p-6 rounded-lg border-2 transition ${
                   instanceType === 'blank'
@@ -217,7 +313,10 @@ export default function PersonaInstanceCreatePage() {
                 <div className="text-sm opacity-80">从零开始，完全自定义你的人格模型</div>
               </button>
               <button
-                onClick={() => setInstanceType('persona')}
+                onClick={() => {
+                  setInstanceType('persona');
+                  setSelectedTemplateId('');
+                }}
                 className={`p-6 rounded-lg border-2 transition ${
                   instanceType === 'persona'
                     ? mode === 'waibi' ? 'border-green-500 bg-green-500/20' : 'border-[var(--accent-cyan)] bg-blue-50'
@@ -227,6 +326,18 @@ export default function PersonaInstanceCreatePage() {
                 <div className="text-4xl mb-3">🎭</div>
                 <div className="text-lg font-semibold mb-2">基于预制人格</div>
                 <div className="text-sm opacity-80">基于MBTI人格类型，使用预设提示词</div>
+              </button>
+              <button
+                onClick={() => setInstanceType('template')}
+                className={`p-6 rounded-lg border-2 transition ${
+                  instanceType === 'template'
+                    ? mode === 'waibi' ? 'border-green-500 bg-green-500/20' : 'border-[var(--accent-cyan)] bg-blue-50'
+                    : mode === 'waibi' ? 'border-gray-700 hover:border-green-500/50' : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-4xl mb-3">🔧</div>
+                <div className="text-lg font-semibold mb-2">基于收藏模型</div>
+                <div className="text-sm opacity-80">基于你收藏的模型进行二次创作</div>
               </button>
             </div>
 
@@ -241,17 +352,75 @@ export default function PersonaInstanceCreatePage() {
                   <option value="">请选择人格类型</option>
                   {MBTI_TYPES.map((p) => (
                     <option key={p.name} value={p.name}>
-                      {p.name} - {p.description}
+                      {p.name} - {p.description.length > 50 ? p.description.slice(0, 50) + '...' : p.description}
                     </option>
                   ))}
                 </select>
               </div>
             )}
 
+            {instanceType === 'template' && (
+              <div className="mt-6">
+                <label className="block text-sm font-medium mb-2">选择收藏的模型</label>
+                {forkedInstances.length === 0 ? (
+                  <div className={`p-4 rounded-lg ${mode === 'waibi' ? 'bg-gray-800/50 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
+                    你还没有收藏任何模型实例
+                  </div>
+                ) : (
+                  <select
+                    value={selectedTemplateId}
+                    onChange={(e) => {
+                      const templateId = e.target.value;
+                      setSelectedTemplateId(templateId);
+                      if (templateId) {
+                        // 加载模板数据
+                        fetchWithAuth(`/api/persona-instance/${templateId}`)
+                          .then(async (r) => {
+                            if (r.ok) {
+                              const data = await r.json();
+                              if (data.instance) {
+                                setName(data.instance.name || '');
+                                setDescription(data.instance.description || '');
+                                setSystemPrompt(data.instance.systemPrompt || '');
+                                setTrainingSamples(data.instance.trainingSamples || []);
+                                setModelParams(data.instance.modelParams || {
+                                  temperature: 0.7,
+                                  topP: 0.9,
+                                  topK: 50,
+                                  maxTokens: 200,
+                                  epochs: 3,
+                                  learningRate: 0.001
+                                });
+                                setAvatarUrl(data.instance.avatarUrl || '');
+                                setTags(data.instance.tags || []);
+                              }
+                            }
+                          })
+                          .catch((err) => {
+                            console.error('加载模板失败:', err);
+                          });
+                      }
+                    }}
+                    className={`w-full p-3 rounded-lg ${inputClass}`}
+                  >
+                    <option value="">请选择收藏的模型</option>
+                    {forkedInstances.map((inst) => (
+                      <option key={inst._id} value={inst._id}>
+                        {inst.name} {inst.originalUserName ? `(原创: ${inst.originalUserName})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setStep(2)}
-                disabled={instanceType === 'persona' && !selectedPersona}
+                disabled={
+                  (instanceType === 'persona' && !selectedPersona) ||
+                  (instanceType === 'template' && !selectedTemplateId)
+                }
                 className={`px-6 py-2 rounded-lg text-white ${accentBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 下一步

@@ -54,11 +54,62 @@ export async function POST(req: NextRequest) {
       avatarUrl,
       tags,
       isPublic,
-      isTrainingSetPublic
+      isTrainingSetPublic,
+      templateInstanceId // 模板实例ID（如果基于收藏模型创建）
     } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ message: '实例名称不能为空' }, { status: 400 });
+    }
+
+    // 如果基于收藏模型创建，获取模板实例信息
+    let templateInstance: any = null;
+    let developmentLevel = 1; // 默认是原创
+    let originalUserId: string | undefined = undefined;
+    let originalUserName = '';
+    let developerUserId: string | undefined = undefined;
+    let developerUserName = '';
+    let sourceInstanceId: string | undefined = undefined;
+    let sourceUserId: string | undefined = undefined;
+    let forkChain: string[] = [];
+
+    if (templateInstanceId) {
+      // 获取模板实例（必须是用户收藏的实例）
+      templateInstance = await PersonaInstance.findOne({
+        _id: templateInstanceId,
+        userId: payload.userId,
+        isForked: true
+      }).lean() as any;
+
+      if (!templateInstance) {
+        return NextResponse.json({ message: '模板实例不存在或无权访问' }, { status: 404 });
+      }
+
+      // 继承开发层级和原始作者信息
+      developmentLevel = (templateInstance.developmentLevel || 1) + 1; // 增加开发层级
+      originalUserId = templateInstance.originalUserId || templateInstance.userId;
+      originalUserName = templateInstance.originalUserName || '';
+      developerUserId = payload.userId; // 二创作者ID（当前用户）
+      
+      // 获取二创作者信息
+      try {
+        const developerUser = await User.findOne({ userId: payload.userId }).select('username name').lean() as any;
+        if (developerUser) {
+          developerUserName = developerUser.username || developerUser.name || '';
+        }
+      } catch (err) {
+        console.error('[persona-instance] 获取二创作者信息失败:', err);
+      }
+
+      // 继承开发链
+      if (templateInstance.forkChain && templateInstance.forkChain.length > 0) {
+        forkChain = [...templateInstance.forkChain, templateInstanceId];
+      } else {
+        forkChain = [templateInstance.sourceInstanceId || templateInstanceId, templateInstanceId];
+      }
+
+      sourceInstanceId = templateInstanceId;
+      sourceUserId = templateInstance.userId;
     }
 
     // 如果选择了预制人格，自动加载该人格的训练数据
@@ -93,7 +144,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const instance = new PersonaInstance({
+    // 如果基于模板创建，使用模板的训练样本（如果用户没有提供）
+    if (templateInstance && finalTrainingSamples.length === 0) {
+      finalTrainingSamples = templateInstance.trainingSamples || [];
+    }
+
+    const instanceData: any = {
       userId: payload.userId,
       name: name.trim(),
       description: description?.trim() || '',
@@ -114,7 +170,23 @@ export async function POST(req: NextRequest) {
       isTrainingSetPublic: isTrainingSetPublic !== undefined ? isTrainingSetPublic : true, // 默认公开训练集
       isTrained: false,
       trainingStatus: 'idle'
-    });
+    };
+
+    // 如果基于模板创建，添加fork相关字段
+    if (templateInstanceId) {
+      instanceData.isForked = true;
+      instanceData.sourceInstanceId = sourceInstanceId;
+      instanceData.sourceUserId = sourceUserId;
+      instanceData.developmentLevel = developmentLevel;
+      instanceData.originalUserId = originalUserId;
+      instanceData.originalUserName = originalUserName;
+      instanceData.developerUserId = developerUserId;
+      instanceData.developerUserName = developerUserName;
+      instanceData.forkChain = forkChain;
+      instanceData.modifiedAt = new Date(); // 标记为已修改（二次开发）
+    }
+
+    const instance = new PersonaInstance(instanceData);
 
     await instance.save();
 
