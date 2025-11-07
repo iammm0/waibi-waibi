@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useVibe } from '@/app/providers';
-import { MBTI_TYPES } from '@/lib/mbti';
+import { useRouter } from 'next/navigation';
 
 // 预设的模型列表
 const DEFAULT_MODELS = [
@@ -18,8 +18,10 @@ const DEFAULT_MODELS = [
 ];
 
 interface ChatSidebarProps {
-  personaCode: string;
-  onPersonaChange: (code: string) => void;
+  instanceId: string;
+  onInstanceChange: (id: string) => void;
+  instances: any[];
+  loadingInstances: boolean;
   model: string;
   onModelChange: (model: string) => void;
   isCollapsed: boolean;
@@ -27,14 +29,17 @@ interface ChatSidebarProps {
 }
 
 export default function ChatSidebar({
-  personaCode,
-  onPersonaChange,
+  instanceId,
+  onInstanceChange,
+  instances,
+  loadingInstances,
   model,
   onModelChange,
   isCollapsed,
   onToggleCollapse,
 }: ChatSidebarProps) {
   const { mode } = useVibe();
+  const router = useRouter();
 
   const sidebarClass = mode === 'waibi' 
     ? 'bg-black/95 border-r border-green-500/20 text-white shadow-lg' 
@@ -79,25 +84,53 @@ export default function ChatSidebar({
 
       {/* 内容区域 */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 sm:space-y-5">
-        {/* 人格选择 */}
+        {/* 模型实例选择 */}
         <div>
-          <label className={`block text-xs sm:text-sm font-medium mb-2 ${mode === 'waibi' ? 'text-gray-200' : 'text-gray-700'}`}>
-            选择人格
-          </label>
-          <select
-            className={`w-full p-2 sm:p-2.5 rounded-lg text-xs sm:text-sm transition-all ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
-            value={personaCode}
-            onChange={(e) => onPersonaChange(e.target.value)}
-          >
-            {MBTI_TYPES.map((p) => (
-              <option key={p.id} value={p.name.toLowerCase()}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <p className={`text-xs mt-1 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
-            {MBTI_TYPES.find(p => p.name.toLowerCase() === personaCode)?.description || ''}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <label className={`block text-xs sm:text-sm font-medium ${mode === 'waibi' ? 'text-gray-200' : 'text-gray-700'}`}>
+              选择模型实例
+            </label>
+            <button
+              onClick={() => router.push('/persona-instance/create')}
+              className={`text-xs px-2 py-1 rounded ${mode === 'waibi' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+            >
+              + 新建
+            </button>
+          </div>
+          {loadingInstances ? (
+            <div className={`text-xs text-center py-4 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+              加载中...
+            </div>
+          ) : instances.length === 0 ? (
+            <div className={`text-xs text-center py-4 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className="mb-2">还没有创建模型实例</div>
+              <button
+                onClick={() => router.push('/persona-instance/create')}
+                className={`px-3 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110'} text-white`}
+              >
+                立即创建
+              </button>
+            </div>
+          ) : (
+            <>
+              <select
+                className={`w-full p-2 sm:p-2.5 rounded-lg text-xs sm:text-sm transition-all ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
+                value={instanceId}
+                onChange={(e) => onInstanceChange(e.target.value)}
+              >
+                {instances.map((instance) => (
+                  <option key={instance._id} value={instance._id}>
+                    {instance.name}
+                  </option>
+                ))}
+              </select>
+              {instances.find(i => i._id === instanceId) && (
+                <p className={`text-xs mt-1 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {instances.find(i => i._id === instanceId)?.description || '无描述'}
+                </p>
+              )}
+            </>
+          )}
         </div>
 
         {/* 模型选择 */}
@@ -117,17 +150,26 @@ export default function ChatSidebar({
         </div>
 
         {/* 当前选择信息卡片 */}
-        <div className={`p-3 sm:p-4 rounded-xl border ${mode === 'waibi' ? 'bg-gray-900/60 border-green-500/20' : 'bg-gray-50 border-gray-200'}`}>
-          <div className={`text-xs font-medium mb-2.5 ${mode === 'waibi' ? 'text-green-400' : 'text-gray-500'}`}>
-            当前配置
+        {instanceId && instances.find(i => i._id === instanceId) && (
+          <div className={`p-3 sm:p-4 rounded-xl border ${mode === 'waibi' ? 'bg-gray-900/60 border-green-500/20' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`text-xs font-medium mb-2.5 ${mode === 'waibi' ? 'text-green-400' : 'text-gray-500'}`}>
+              当前配置
+            </div>
+            <div className={`text-base font-semibold mb-1 ${mode === 'waibi' ? 'text-white' : 'text-gray-900'}`}>
+              {instances.find(i => i._id === instanceId)?.name || '未知实例'}
+            </div>
+            <div className={`text-xs mb-2 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-600'}`}>
+              {model}
+            </div>
+            {instances.find(i => i._id === instanceId)?.personaCode && (
+              <div className={`text-xs px-2 py-1 rounded inline-block ${
+                mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+              }`}>
+                {instances.find(i => i._id === instanceId)?.personaCode.toUpperCase()}
+              </div>
+            )}
           </div>
-          <div className={`text-base font-semibold mb-1 ${mode === 'waibi' ? 'text-white' : 'text-gray-900'}`}>
-            {MBTI_TYPES.find(p => p.name.toLowerCase() === personaCode)?.name || personaCode.toUpperCase()}
-          </div>
-          <div className={`text-xs ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-600'}`}>
-            {model}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

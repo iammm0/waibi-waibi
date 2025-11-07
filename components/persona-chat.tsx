@@ -6,16 +6,17 @@ import { FaSpinner } from 'react-icons/fa6';
 import { fetchWithAuth } from '@/lib/auth-utils';
 
 interface PersonaChatProps {
-  personaCode: string;
+  instanceId: string;
   model: string;
 }
 
-export default function PersonaChat({ personaCode: code, model }: PersonaChatProps) {
+export default function PersonaChat({ instanceId, model }: PersonaChatProps) {
   const { mode } = useVibe();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false); // 发送消息加载
   const [personaLoading, setPersonaLoading] = useState(false); // 切换人格时加载
   const [messages, setMessages] = useState<Array<{ role: 'user'|'assistant'|'system'; content: string }>>([]);
+  const [instanceInfo, setInstanceInfo] = useState<any>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -24,11 +25,31 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); 
   }, [messages]);
 
+  // 获取实例信息
+  useEffect(() => {
+    if (!instanceId) {
+      setInstanceInfo(null);
+      return;
+    }
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token) return;
+    
+    fetchWithAuth(`/api/persona-instance/${instanceId}`)
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.instance) {
+          setInstanceInfo(data.instance);
+        }
+      })
+      .catch(() => setInstanceInfo(null));
+  }, [instanceId]);
+
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    if (!token || !code) { setMessages([]); return; }
+    if (!token || !instanceId) { setMessages([]); return; }
     setPersonaLoading(true);
-    fetchWithAuth(`/api/persona/${code}/history`)
+    // 使用模型实例的personaCode来获取历史记录
+    fetchWithAuth(`/api/persona/instance_${instanceId}/history`)
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data?.items || data.items.length === 0) { 
@@ -65,7 +86,7 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
       })
       .catch(() => setMessages([]))
       .finally(() => setPersonaLoading(false));
-  }, [code]);
+  }, [instanceId]);
 
   const send = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -85,7 +106,7 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
       textareaRef.current.style.height = 'auto';
     }
     try {
-      const res = await fetchWithAuth(`/api/persona/${code}/chat`, {
+      const res = await fetchWithAuth(`/api/persona-instance/${instanceId}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, model: model || undefined })
@@ -99,7 +120,7 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
           throw new Error(data?.message || '发送失败');
         }
       } else {
-        setMessages([...optimistic, { role: 'assistant', content: data.reply }]);
+        setMessages([...optimistic, { role: 'assistant', content: data.response }]);
       }
     } catch (err: any) {
       setMessages([...optimistic, { role: 'assistant', content: `出错了：${err?.message || '未知错误'}` }]);
@@ -128,19 +149,39 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
         {personaLoading && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm opacity-80">
             <FaSpinner className="animate-spin text-[var(--accent-cyan)]" />
-            <span>正在加载 {code.toUpperCase()} 的记忆…</span>
+            <span>正在加载记忆…</span>
           </div>
         )}
 
-        {!personaLoading && messages.length === 0 && (
+        {!personaLoading && !instanceId && (
           <div className={`flex flex-col items-center justify-center h-full ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-600'}`}>
             <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mb-4 ${
               mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-600'
             }`}>
-              {code.slice(0, 2).toUpperCase()}
+              💬
             </div>
-            <div className="text-2xl font-semibold mb-2">与 {code.toUpperCase()} 开始对话</div>
-            <div className="text-sm opacity-70">选择一个人格，开始你的对话之旅</div>
+            <div className="text-2xl font-semibold mb-2">选择模型实例</div>
+            <div className="text-sm opacity-70">请从侧边栏选择一个模型实例开始对话</div>
+          </div>
+        )}
+
+        {!personaLoading && instanceId && messages.length === 0 && (
+          <div className={`flex flex-col items-center justify-center h-full ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-600'}`}>
+            {instanceInfo?.avatarUrl ? (
+              <img
+                src={instanceInfo.avatarUrl}
+                alt={instanceInfo.name}
+                className="w-16 h-16 rounded-full object-cover mb-4"
+              />
+            ) : (
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mb-4 ${
+                mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-600'
+              }`}>
+                {instanceInfo?.name?.slice(0, 2) || 'AI'}
+              </div>
+            )}
+            <div className="text-2xl font-semibold mb-2">与 {instanceInfo?.name || '模型实例'} 开始对话</div>
+            <div className="text-sm opacity-70">{instanceInfo?.description || '开始你的对话之旅'}</div>
           </div>
         )}
 
@@ -156,7 +197,7 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
                     ? 'bg-[var(--accent-purple)] text-white'
                     : 'bg-purple-500 text-white'
               }`}>
-                {m.role === 'user' ? '你' : code.slice(0, 2).toUpperCase()}
+                {m.role === 'user' ? '你' : (instanceInfo?.name?.slice(0, 2) || 'AI')}
               </div>
               <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
                 m.role === 'user'
@@ -180,7 +221,7 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
                 ? 'bg-[var(--accent-purple)] text-white' 
                 : 'bg-purple-500 text-white'
             }`}>
-              {code.slice(0, 2).toUpperCase()}
+              {instanceInfo?.name?.slice(0, 2) || 'AI'}
             </div>
             <div className={`px-4 py-3 rounded-2xl shadow-sm ${
               mode === 'waibi' 
@@ -209,7 +250,7 @@ export default function PersonaChat({ personaCode: code, model }: PersonaChatPro
                   ? 'focus:ring-green-500/50 ' + inputClass
                   : 'focus:ring-[var(--accent-cyan)] ' + inputClass
               }`}
-              placeholder={`向 ${code.toUpperCase()} 说点什么...`}
+              placeholder={`向 ${instanceInfo?.name || '模型实例'} 说点什么...`}
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
