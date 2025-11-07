@@ -19,7 +19,6 @@ const connectionOptions: mongoose.ConnectOptions = {
   
   // 缓冲配置
   bufferCommands: true, // 启用命令缓冲
-  bufferMaxEntries: 0, // 无限制缓冲（0 表示无限制）
   
   // 心跳配置
   heartbeatFrequencyMS: 10000, // 心跳频率（10秒）

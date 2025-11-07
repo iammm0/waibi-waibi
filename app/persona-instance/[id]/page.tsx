@@ -41,11 +41,17 @@ interface PersonaInstance {
   isTrainingSetPublic?: boolean;
   trainingSetVisible?: boolean;
   trainingSamplesCount?: number;
+  // 收藏相关字段
+  sourceInstanceId?: string;
+  sourceUserId?: string;
+  isForked?: boolean;
+  isInvalid?: boolean;
+  modifiedAt?: string;
   // 开发层级相关字段
   developmentLevel?: number;
   originalUserId?: string;
   originalUserName?: string;
-  isForked?: boolean;
+  forkChain?: string[];
   createdAt: string;
   updatedAt: string;
 }
