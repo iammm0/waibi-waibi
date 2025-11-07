@@ -181,7 +181,11 @@ export default function PersonaChat({ instanceId, model }: PersonaChatProps) {
               </div>
             )}
             <div className="text-2xl font-semibold mb-2">与 {instanceInfo?.name || '模型实例'} 开始对话</div>
-            <div className="text-sm opacity-70">{instanceInfo?.description || '开始你的对话之旅'}</div>
+            <div className="text-sm opacity-70">
+              {instanceInfo?.description 
+                ? (instanceInfo.description.length > 50 ? instanceInfo.description.slice(0, 50) + '...' : instanceInfo.description)
+                : '开始你的对话之旅'}
+            </div>
           </div>
         )}
 
