@@ -8,7 +8,7 @@ import { FaMoon, FaSun, FaEnvelope, FaUser, FaSignOutAlt, FaChevronDown } from "
 import Link from "next/link";
 
 const navItems = [
-  { href: "/", label: "人格实例" },
+  { href: "/", label: "开放实例" },
   { href: "/guestbook", label: "留言板" },
   { href: "/chat", label: "聊一聊" },
   { href: "/mbti", label: "训练" },
