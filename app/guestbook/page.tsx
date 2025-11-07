@@ -6,6 +6,7 @@ import SectionHeader from '@/components/section-header';
 import { MBTI_TYPES } from '@/lib/mbti';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/auth-utils';
+import UniverseStatus from '@/components/universe-status';
 
 interface Reply {
   id: string;
@@ -48,6 +49,12 @@ export default function GuestbookPage() {
   const [newCommentContent, setNewCommentContent] = useState('');
   const [newCommentPersona, setNewCommentPersona] = useState('intj');
   const [submittingNewComment, setSubmittingNewComment] = useState(false);
+  const [layout, setLayout] = useState<1 | 2 | 3>(1); // 布局：1列、2列、3列
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [showNewCommentForm, setShowNewCommentForm] = useState(false);
+  const itemsPerPage = 10;
 
   const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
   const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
@@ -55,11 +62,12 @@ export default function GuestbookPage() {
   const cardClass = mode === 'waibi' ? 'bg-black/50 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
   const replyCardClass = mode === 'waibi' ? 'bg-gray-900/50 border border-green-500/20 text-white' : 'bg-gray-50 border border-gray-200 text-gray-900';
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (page: number = currentPage) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.append('limit', '50'); // 增加limit，确保能加载更多留言
+      params.append('limit', itemsPerPage.toString());
+      params.append('offset', ((page - 1) * itemsPerPage).toString());
       if (selectedPersona !== 'all') {
         params.append('personaCode', selectedPersona);
       }
@@ -68,6 +76,8 @@ export default function GuestbookPage() {
       const data = await res.json();
       if (res.ok) {
         setMessages(data.messages || []);
+        setTotal(data.total || 0);
+        setHasMore(data.hasMore || false);
       }
     } catch (error) {
       console.error('获取留言失败:', error);
@@ -77,8 +87,13 @@ export default function GuestbookPage() {
   };
 
   useEffect(() => {
-    fetchMessages();
+    setCurrentPage(1);
+    fetchMessages(1);
   }, [selectedPersona]);
+
+  useEffect(() => {
+    fetchMessages(currentPage);
+  }, [currentPage]);
 
   const handleReply = async (messageId: string, replyId?: string, replyToUsername?: string, replyToUserId?: string) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -114,7 +129,7 @@ export default function GuestbookPage() {
         setReplyContent('');
         setReplyingTo(null);
         // 刷新评论列表
-        await fetchMessages();
+        await fetchMessages(currentPage);
       } else {
         alert(data?.message || '回复失败');
       }
@@ -162,8 +177,10 @@ export default function GuestbookPage() {
       const data = await res.json();
       if (res.ok) {
         setNewCommentContent('');
-        // 刷新留言列表
-        await fetchMessages();
+        setShowNewCommentForm(false);
+        // 刷新留言列表，回到第一页
+        setCurrentPage(1);
+        await fetchMessages(1);
       } else {
         alert(data?.message || '提交失败');
       }
@@ -275,16 +292,26 @@ export default function GuestbookPage() {
     });
   };
 
+  const totalPages = Math.ceil(total / itemsPerPage);
+
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
         title="留言板" 
-        subtitle="选择你的人格，留下一句想说的话。匿名或实名都可以。" 
+        subtitle="选择你的人格，留下一句想说的话。匿名或实名都可以。"
+        actions={
+          <button
+            onClick={() => setShowNewCommentForm(!showNewCommentForm)}
+            className={`px-4 py-2 rounded-lg text-white transition ${accentBtn}`}
+          >
+            {showNewCommentForm ? '取消' : '留下留言'}
+          </button>
+        }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        {/* 提交留言表单 */}
-        <div className={`rounded-xl shadow-md p-6 ${panelClass}`}>
+      {/* 留言创建表单（可折叠） */}
+      {showNewCommentForm && (
+        <div className={`rounded-xl shadow-md p-6 mb-6 ${panelClass}`}>
           <h2 className="text-xl font-semibold mb-4">留下你的留言</h2>
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -328,11 +355,13 @@ export default function GuestbookPage() {
             </button>
           </form>
         </div>
+      )}
 
-        {/* 留言列表 */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* 人格筛选 */}
-          <div className="flex items-center gap-3 flex-wrap mb-4">
+      {/* 留言列表 */}
+      <div className="space-y-4">
+        {/* 筛选和布局控制 */}
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className={`text-sm ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>筛选人格：</span>
             <select
               className={`px-4 py-2 rounded-lg text-sm ${inputClass} focus:outline-none focus:ring-2 ${
@@ -350,16 +379,42 @@ export default function GuestbookPage() {
             </select>
           </div>
 
-          {loading ? (
-            <div className={`text-center py-12 ${cardClass} rounded-xl`}>
-              <div className="text-sm opacity-70">加载中...</div>
+          <div className="flex items-center gap-2">
+            <span className={`text-sm ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>布局：</span>
+            <div className="flex gap-1">
+              {[1, 2, 3].map((cols) => (
+                <button
+                  key={cols}
+                  onClick={() => setLayout(cols as 1 | 2 | 3)}
+                  className={`px-3 py-1 rounded text-sm transition ${
+                    layout === cols
+                      ? mode === 'waibi'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-[var(--accent-cyan)] text-white'
+                      : mode === 'waibi'
+                        ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {cols}列
+                </button>
+              ))}
             </div>
+          </div>
+        </div>
+
+          {loading ? (
+            <UniverseStatus type="loading" context="default" />
           ) : messages.length === 0 ? (
             <div className={`text-center py-12 ${cardClass} rounded-xl`}>
               <div className="text-sm opacity-70">还没有留言，快来留下第一条吧！</div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className={`grid gap-4 ${
+              layout === 1 ? 'grid-cols-1' :
+              layout === 2 ? 'grid-cols-1 md:grid-cols-2' :
+              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+            }`}>
               {messages.map((msg) => {
                 const persona = MBTI_TYPES.find(p => p.name.toLowerCase() === msg.personaCode.toLowerCase());
                 const isReplying = replyingTo?.messageId === msg.id;
@@ -493,7 +548,49 @@ export default function GuestbookPage() {
               })}
             </div>
           )}
-        </div>
+
+        {/* 分页控件 */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg text-sm transition ${
+                currentPage === 1
+                  ? mode === 'waibi'
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : mode === 'waibi'
+                    ? 'bg-gray-800 text-white hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              上一页
+            </button>
+            
+            <div className={`px-4 py-2 rounded-lg text-sm ${
+              mode === 'waibi' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700'
+            }`}>
+              第 {currentPage} / {totalPages} 页
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage >= totalPages}
+              className={`px-4 py-2 rounded-lg text-sm transition ${
+                currentPage >= totalPages
+                  ? mode === 'waibi'
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : mode === 'waibi'
+                    ? 'bg-gray-800 text-white hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              下一页
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

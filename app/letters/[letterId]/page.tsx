@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVibe } from '@/app/providers';
 import SectionHeader from '@/components/section-header';
+import UniverseStatus from '@/components/universe-status';
 
 interface Letter {
   letterId: string;
@@ -36,7 +37,13 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/letters/${letterId}`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const res = await fetch(`/api/letters/${letterId}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setLetter(data.letter);
@@ -66,7 +73,7 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-2 max-w-4xl">
-        <SectionHeader title="加载中..." subtitle="" />
+        <UniverseStatus type="loading" context="letter" />
       </div>
     );
   }
@@ -74,18 +81,13 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
   if (error || !letter) {
     return (
       <div className="container mx-auto px-4 py-2 max-w-4xl">
-        <SectionHeader title="信件详情" subtitle="" />
-        <div className={`text-center py-12 rounded-xl ${panelClass}`}>
-          <div className={mode === 'waibi' ? 'text-red-400' : 'text-red-600'}>
-            {error || '信件不存在'}
-          </div>
-          <button
-            onClick={() => router.push('/')}
-            className={`mt-4 px-4 py-2 rounded-lg ${secondaryBtn}`}
-          >
-            返回信件列表
-          </button>
-        </div>
+        <UniverseStatus
+          type="error"
+          context="letter"
+          message={error || '信件不存在'}
+          actionHref="/inbox"
+          actionLabel="返回收件箱"
+        />
       </div>
     );
   }
