@@ -113,6 +113,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <SectionHeader 
+        icon="👥"
         title={isOwn ? '我的公开主页' : `${profile.username || profile.name || '用户'}的主页`}
         subtitle={isOwn ? '这是其他人看到的你的公开信息' : '公开信息'}
       />

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useVibe } from '@/app/providers';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import SectionHeader from '@/components/section-header';
+import { universeToast } from '@/components/universe-toast';
+import { universeConfirm } from '@/components/universe-confirm';
 
 interface Subscription {
   active: boolean;
@@ -47,13 +49,13 @@ export default function SubscriptionPage() {
               setOrderId(null);
               setSelectedPayment(null);
               await fetchSubscription();
-              alert('支付成功！订阅已激活');
+              universeToast.success('支付成功！订阅已激活');
             } else if (data.status === 'failed' || data.status === 'cancelled') {
               setPolling(false);
               setPaymentUrl(null);
               setOrderId(null);
               setSelectedPayment(null);
-              alert('支付失败或已取消');
+              universeToast.error('支付失败或已取消');
             }
           }
         } catch (err) {
@@ -82,7 +84,11 @@ export default function SubscriptionPage() {
 
   const handleCreateOrder = async (paymentMethod: 'wechat' | 'alipay') => {
     // 显示测试中提示
-    if (!confirm('订阅功能正在测试中，暂时无法正常订阅。是否使用体验版本（免费激活）？')) {
+    const confirmed = await universeConfirm.confirm(
+      '订阅功能正在测试中，暂时无法正常订阅。是否使用体验版本（免费激活）？',
+      { type: 'info', title: '订阅功能测试中' }
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -109,7 +115,7 @@ export default function SubscriptionPage() {
             body: JSON.stringify({ plan: 'monthly', testMode: true }),
           });
           await fetchSubscription();
-          alert('体验版本已激活！订阅功能正在测试中，正式版将支持微信支付和支付宝支付。');
+          universeToast.info('体验版本已激活！订阅功能正在测试中，正式版将支持微信支付和支付宝支付。');
           return;
         }
 
@@ -119,15 +125,15 @@ export default function SubscriptionPage() {
           setOrderId(data.orderId);
           setPolling(true);
         } else {
-          alert('创建订单失败，请重试');
+          universeToast.error('创建订单失败，请重试');
         }
       } else {
         const errorData = await res.json();
-        alert(errorData?.message || '创建订单失败');
+        universeToast.error(errorData?.message || '创建订单失败');
       }
     } catch (err) {
       console.error('创建订单失败:', err);
-      alert('创建订单失败，请重试');
+      universeToast.error('创建订单失败，请重试');
     }
   };
 
@@ -139,33 +145,37 @@ export default function SubscriptionPage() {
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm('确定要取消订阅吗？')) return;
+    const confirmed = await universeConfirm.confirm(
+      '确定要取消订阅吗？',
+      { type: 'warning', title: '取消订阅' }
+    );
+    if (!confirmed) return;
     try {
       const res = await fetchWithAuth('/api/subscription', {
         method: 'DELETE',
       });
       if (res.ok) {
         await fetchSubscription();
-        alert('订阅已取消');
+        universeToast.success('订阅已取消');
       } else {
-        alert('取消订阅失败，请重试');
+        universeToast.error('取消订阅失败，请重试');
       }
     } catch (err) {
-      alert('取消订阅失败，请重试');
+      universeToast.error('取消订阅失败，请重试');
     }
   };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-2 max-w-4xl">
-        <SectionHeader title="订阅计划" subtitle="加载中..." />
+        <SectionHeader icon="💎" title="订阅计划" subtitle="加载中..." />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
-      <SectionHeader title="订阅计划" subtitle="选择合适的订阅计划，解锁更多功能" />
+      <SectionHeader icon="💎" title="订阅计划" subtitle="选择合适的订阅计划，解锁更多功能" />
 
       {/* 测试中提示 */}
       <div className={`rounded-xl p-4 mb-6 ${mode === 'waibi' ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-200' : 'bg-yellow-50 border border-yellow-200 text-yellow-800'}`}>

@@ -94,7 +94,7 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
-      <SectionHeader title="歪比宇宙信件" subtitle={letter.title} />
+      <SectionHeader icon="✉️" title="歪比宇宙信件" subtitle={letter.title} />
 
       <div className={`rounded-xl shadow-md p-6 sm:p-8 mt-6 ${panelClass}`}>
         <div className="mb-6">

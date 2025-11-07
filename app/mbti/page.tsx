@@ -27,6 +27,7 @@ export default function MbtiIndexPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader
+        icon="🧠"
         title="选择你要训练的人格"
         subtitle="点击一个人格进入其训练详情页，预置该人格的提示词与画像"
         actions={
@@ -66,7 +67,9 @@ export default function MbtiIndexPage() {
                   </div>
                   <div className="p-4">
                     <div className={`text-lg font-semibold ${nameClass}`}>{p.name}</div>
-                    <div className={`text-sm mt-1 line-clamp-2 ${descClass}`}>{p.description}</div>
+                    <div className={`text-sm mt-1 line-clamp-2 ${descClass}`}>
+                      {p.description.length > 50 ? p.description.slice(0, 50) + '...' : p.description}
+                    </div>
                   </div>
                 </Link>
               ))}

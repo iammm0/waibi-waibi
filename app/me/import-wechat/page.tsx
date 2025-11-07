@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useVibe } from '@/app/providers';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import SectionHeader from '@/components/section-header';
+import { universeToast } from '@/components/universe-toast';
 
 export default function ImportWechatPage() {
   const { mode } = useVibe();
@@ -26,14 +27,14 @@ export default function ImportWechatPage() {
       if (selectedFile.type === 'application/json' || selectedFile.name.endsWith('.json')) {
         setFile(selectedFile);
       } else {
-        alert('请选择JSON格式的文件');
+        universeToast.warning('请选择JSON格式的文件');
       }
     }
   };
 
   const handleImport = async () => {
     if (!file) {
-      alert('请先选择文件');
+      universeToast.warning('请先选择文件');
       return;
     }
 
@@ -68,13 +69,13 @@ export default function ImportWechatPage() {
         const data = await res.json();
         setResult(data);
         setProgress('处理完成！');
-        alert(`导入成功：${data.success} 条样本，${data.failed} 条失败`);
+        universeToast.success(`导入成功：${data.success} 条样本，${data.failed} 条失败`);
       } else {
         const errorData = await res.json();
         throw new Error(errorData?.message || '导入失败');
       }
     } catch (err: any) {
-      alert(err?.message || '导入失败，请检查文件格式');
+      universeToast.error(err?.message || '导入失败，请检查文件格式');
       setProgress('');
     } finally {
       setProcessing(false);
@@ -103,8 +104,9 @@ export default function ImportWechatPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
       <SectionHeader 
+        icon="📥"
         title="导入微信聊天记录" 
-        subtitle="将微信聊天记录转换为训练样本，用于训练人格模型" 
+        subtitle="将微信聊天记录转换为训练样本，用于训练人格模型"
       />
 
       <div className={`rounded-xl shadow-md p-4 sm:p-6 mt-6 ${panelClass}`}>

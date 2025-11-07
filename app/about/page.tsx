@@ -17,6 +17,7 @@ export default function AboutPage() {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <SectionHeader 
+        icon="ℹ️"
         title="关于 waibi 宇宙" 
         subtitle="探索16种人格的无限可能" 
       />
@@ -90,7 +91,9 @@ export default function AboutPage() {
                 }`}
               >
                 <div className="text-lg font-bold mb-1">{persona.name}</div>
-                <div className="text-xs opacity-70 line-clamp-2">{persona.description}</div>
+                <div className="text-xs opacity-70 line-clamp-2">
+                  {persona.description.length > 50 ? persona.description.slice(0, 50) + '...' : persona.description}
+                </div>
               </Link>
             ))}
           </div>

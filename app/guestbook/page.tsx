@@ -7,6 +7,7 @@ import { MBTI_TYPES } from '@/lib/mbti';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import UniverseStatus from '@/components/universe-status';
+import { universeToast } from '@/components/universe-toast';
 
 interface Reply {
   id: string;
@@ -98,12 +99,12 @@ export default function GuestbookPage() {
   const handleReply = async (messageId: string, replyId?: string, replyToUsername?: string, replyToUserId?: string) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
-      alert('请先登录后再评论');
+      universeToast.warning('请先登录后再评论');
       return;
     }
 
     if (!replyContent.trim()) {
-      alert('请输入回复内容');
+      universeToast.warning('请输入回复内容');
       return;
     }
 
@@ -131,10 +132,10 @@ export default function GuestbookPage() {
         // 刷新评论列表
         await fetchMessages(currentPage);
       } else {
-        alert(data?.message || '回复失败');
+        universeToast.error(data?.message || '回复失败');
       }
     } catch (error: any) {
-      alert(error?.message || '回复失败');
+      universeToast.error(error?.message || '回复失败');
     } finally {
       setSubmittingReply(false);
     }
@@ -153,12 +154,12 @@ export default function GuestbookPage() {
   const handleNewComment = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
-      alert('请先登录后再评论');
+      universeToast.warning('请先登录后再评论');
       return;
     }
 
     if (!newCommentContent.trim()) {
-      alert('请输入评论内容');
+      universeToast.warning('请输入评论内容');
       return;
     }
 
@@ -182,10 +183,10 @@ export default function GuestbookPage() {
         setCurrentPage(1);
         await fetchMessages(1);
       } else {
-        alert(data?.message || '提交失败');
+        universeToast.error(data?.message || '提交失败');
       }
     } catch (error: any) {
-      alert(error?.message || '提交失败');
+      universeToast.error(error?.message || '提交失败');
     } finally {
       setSubmittingNewComment(false);
     }
@@ -297,6 +298,7 @@ export default function GuestbookPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
+        icon="💬"
         title="留言板" 
         subtitle="选择你的人格，留下一句想说的话。匿名或实名都可以。"
         actions={
@@ -326,7 +328,7 @@ export default function GuestbookPage() {
               >
                 {MBTI_TYPES.map((p) => (
                   <option key={p.id} value={p.name.toLowerCase()}>
-                    {p.name} - {p.description}
+                    {p.name} - {p.description.length > 50 ? p.description.slice(0, 50) + '...' : p.description}
                   </option>
                 ))}
               </select>

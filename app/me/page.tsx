@@ -7,6 +7,8 @@ import AvatarEditor from '@/components/avatar-editor';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import SectionHeader from '@/components/section-header';
 import { MBTI_TYPES } from '@/lib/mbti';
+import { universeToast } from '@/components/universe-toast';
+import { universeConfirm } from '@/components/universe-confirm';
 
 type Me = { 
   user: { 
@@ -329,31 +331,35 @@ export default function MePage() {
       if (res.ok) {
         const data = await res.json();
         setSubscription(data.subscription);
-        alert('订阅成功！');
+        universeToast.success('订阅成功！');
         await fetchSubscription();
       } else {
-        alert('订阅失败，请重试');
+        universeToast.error('订阅失败，请重试');
       }
     } catch (err) {
-      alert('订阅失败，请重试');
+      universeToast.error('订阅失败，请重试');
     }
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm('确定要取消订阅吗？')) return;
+    const confirmed = await universeConfirm.confirm(
+      '确定要取消订阅吗？',
+      { type: 'warning', title: '取消订阅' }
+    );
+    if (!confirmed) return;
     try {
       const res = await fetchWithAuth('/api/subscription', {
         method: 'DELETE',
       });
       if (res.ok) {
         setSubscription({ active: false, price: 20 });
-        alert('订阅已取消');
+        universeToast.success('订阅已取消');
         await fetchSubscription();
       } else {
-        alert('取消订阅失败，请重试');
+        universeToast.error('取消订阅失败，请重试');
       }
     } catch (err) {
-      alert('取消订阅失败，请重试');
+      universeToast.error('取消订阅失败，请重试');
     }
   };
 
@@ -369,17 +375,21 @@ export default function MePage() {
         a.download = `chat-export-${me?.userId}-${Date.now()}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        alert('聊天记录导出成功！');
+        universeToast.success('聊天记录导出成功！');
       } else {
-        alert('导出失败，请重试');
+        universeToast.error('导出失败，请重试');
       }
     } catch (err) {
-      alert('导出失败，请重试');
+      universeToast.error('导出失败，请重试');
     }
   };
 
   const handleDeleteTrainingSample = async (id: string) => {
-    if (!confirm('确定要删除这个训练样本吗？')) return;
+    const confirmed = await universeConfirm.confirm(
+      '确定要删除这个训练样本吗？',
+      { type: 'warning', title: '删除训练样本', confirmText: '删除', cancelText: '取消' }
+    );
+    if (!confirmed) return;
     try {
       const res = await fetchWithAuth('/api/me/training', {
         method: 'DELETE',
@@ -388,19 +398,19 @@ export default function MePage() {
       });
       if (res.ok) {
         setTrainingSamples(trainingSamples.filter(s => s._id !== id));
-        alert('删除成功');
+        universeToast.success('删除成功');
       } else {
-        alert('删除失败，请重试');
+        universeToast.error('删除失败，请重试');
       }
     } catch (err) {
-      alert('删除失败，请重试');
+      universeToast.error('删除失败，请重试');
     }
   };
 
   const handleSaveAvatar = async (imageData: string) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
-      alert('请先登录');
+      universeToast.warning('请先登录');
       return;
     }
 
@@ -421,21 +431,21 @@ export default function MePage() {
         // 立即刷新用户信息
         await fetchMe();
       } else if (res.status === 401) {
-        alert('登录已过期，请重新登录');
+        universeToast.warning('登录已过期，请重新登录');
         logout();
       } else {
         const errorData = await res.json();
-        alert(errorData?.message || '保存头像失败');
+        universeToast.error(errorData?.message || '保存头像失败');
       }
     } catch (err: any) {
-      alert(err?.message || '保存头像失败');
+      universeToast.error(err?.message || '保存头像失败');
     }
   };
 
   if (!me) {
     return (
       <div className="container mx-auto px-4 py-2 max-w-6xl">
-        <SectionHeader title="个人中心" subtitle="请先登录" />
+        <SectionHeader icon="👤" title="个人中心" subtitle="请先登录" />
         <div className={`text-center py-12 rounded-xl ${panelClass}`}>
           <div className="text-sm opacity-70">{error || '未登录'}</div>
         </div>
@@ -445,7 +455,7 @@ export default function MePage() {
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
-      <SectionHeader title="个人中心" subtitle="管理您的账户、订阅和数据" />
+      <SectionHeader icon="👤" title="个人中心" subtitle="管理您的账户、订阅和数据" />
 
       {/* 用户信息卡片 */}
       <div className={`rounded-xl shadow-md p-4 sm:p-6 mb-6 ${panelClass}`}>
@@ -781,7 +791,7 @@ export default function MePage() {
                   <option value="">未选择</option>
                   {MBTI_TYPES.map((type) => (
                     <option key={type.name} value={type.name}>
-                      {type.name} - {type.description}
+                      {type.name} - {type.description.length > 50 ? type.description.slice(0, 50) + '...' : type.description}
                     </option>
                   ))}
                 </select>
@@ -1183,15 +1193,15 @@ export default function MePage() {
                       const data = await res.json();
                       await fetchMe();
                       setIsEditing(false);
-                      alert('保存成功');
+                      universeToast.success('保存成功');
                     } else {
                       const errorData = await res.json().catch(() => ({ message: '保存失败' }));
                       console.error('保存失败:', errorData);
-                      alert(`保存失败: ${errorData.message || '未知错误'}`);
+                      universeToast.error(`保存失败: ${errorData.message || '未知错误'}`);
                     }
                   } catch (err: any) {
                     console.error('保存失败:', err);
-                    alert(`保存失败: ${err.message || '网络错误'}`);
+                    universeToast.error(`保存失败: ${err.message || '网络错误'}`);
                   }
                 }}
                 className={`flex-1 px-4 py-2 rounded-lg text-white ${accentBtn}`}
@@ -1264,11 +1274,6 @@ export default function MePage() {
             >
               <span>导出模型交互记录</span>
               <div className="flex items-center gap-2">
-                <span className={`px-1.5 py-0.5 rounded text-xs ${
-                  mode === 'waibi' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  开发中
-                </span>
                 <span>→</span>
               </div>
             </button>
@@ -1329,7 +1334,7 @@ export default function MePage() {
                     <h3 className="font-semibold text-lg mb-1">{instance.name}</h3>
                     {instance.description && (
                       <p className={`text-sm mb-2 ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {instance.description}
+                        {instance.description.length > 50 ? instance.description.slice(0, 50) + '...' : instance.description}
                       </p>
                     )}
                   </div>
@@ -1387,19 +1392,23 @@ export default function MePage() {
                   </button>
                   <button
                     onClick={async () => {
-                      if (!confirm('确定要删除这个模型实例吗？')) return;
+                      const confirmed = await universeConfirm.confirm(
+                        '确定要删除这个模型实例吗？',
+                        { type: 'danger', title: '删除模型实例', confirmText: '删除', cancelText: '取消' }
+                      );
+                      if (!confirmed) return;
                       try {
                         const res = await fetchWithAuth(`/api/persona-instance/${instance._id}`, {
                           method: 'DELETE',
                         });
                         if (res.ok) {
                           await fetchPersonaInstances();
-                          alert('删除成功');
+                          universeToast.success('删除成功');
                         } else {
-                          alert('删除失败');
+                          universeToast.error('删除失败');
                         }
                       } catch (err) {
-                        alert('删除失败');
+                        universeToast.error('删除失败');
                       }
                     }}
                     className={`px-3 py-2 rounded-lg text-sm ${

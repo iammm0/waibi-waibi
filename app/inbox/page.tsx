@@ -78,6 +78,7 @@ export default function InboxPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
+        icon="📭"
         title="收件箱" 
         subtitle="来自歪比宇宙的信件，记录着我们的故事与思考" 
       />
