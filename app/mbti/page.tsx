@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MBTI_TYPES } from '@/lib/mbti';
 import { useVibe } from '@/app/providers';
 import ProgressiveImage from '@/components/progressive-image';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 
 export default function MbtiIndexPage() {
   const { mode } = useVibe();
@@ -13,6 +14,7 @@ export default function MbtiIndexPage() {
     : 'bg-white border border-gray-200 hover:border-gray-300';
   const nameClass = mode === 'waibi' ? 'text-white' : 'text-gray-900';
   const descClass = mode === 'waibi' ? 'text-gray-300' : 'text-gray-600';
+  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
   
   const groups: { [k: string]: string[] } = {
     NT: ['INTJ', 'INTP', 'ENTJ', 'ENTP'],
@@ -27,6 +29,17 @@ export default function MbtiIndexPage() {
       <SectionHeader
         title="选择你要训练的人格"
         subtitle="点击一个人格进入其训练详情页，预置该人格的提示词与画像"
+        actions={
+          <a
+            href="https://www.16personalities.com/ch"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`px-4 py-2 rounded-lg text-white transition ${accentBtn} flex items-center gap-2`}
+          >
+            <span>不知道自己的MBTI? 点击跳转到-16人格官方测试</span>
+            <FaExternalLinkAlt className="text-sm" />
+          </a>
+        }
       />
 
       {ordered.map((g) => {
