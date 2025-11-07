@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get('limit') || '20', 10);
+  const limit = parseInt(searchParams.get('limit') || '10', 10);
+  const offset = parseInt(searchParams.get('offset') || '0', 10);
   const personaCode = searchParams.get('personaCode'); // 可选的人格筛选
   
   try {
@@ -26,9 +27,11 @@ export async function GET(req: NextRequest) {
 
     // 如果没有指定personaCode，返回所有留言（按时间倒序）
     // 如果指定了personaCode，只返回该人格的留言
+    const total = await Message.countDocuments(query);
     const messages = await Message.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
+      .skip(offset)
       .lean() as any[];
 
     // 获取每条评论的回复
@@ -107,7 +110,13 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    return NextResponse.json({ messages: formattedMessages });
+    return NextResponse.json({ 
+      messages: formattedMessages,
+      total,
+      limit,
+      offset,
+      hasMore: offset + limit < total
+    });
   } catch (error) {
     console.error('[guestbook] 获取评论失败:', error);
     return NextResponse.json({ message: '获取评论失败' }, { status: 500 });
