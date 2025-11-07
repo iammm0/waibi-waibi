@@ -7,6 +7,7 @@ import { useVibe } from '@/app/providers';
 import SectionHeader from '@/components/section-header';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import UniverseStatus from '@/components/universe-status';
+import { universeToast } from '@/components/universe-toast';
 
 interface PersonaInstance {
   _id: string;
@@ -23,10 +24,15 @@ interface PersonaInstance {
   }>;
   trainingSetVisible?: boolean;
   trainingSamplesCount?: number;
+  // 作者信息
+  authorName?: string;
+  // 收藏状态
+  isFavorited?: boolean;
   // 开发层级相关字段
   developmentLevel?: number;
   originalUserId?: string;
   originalUserName?: string;
+  developerUserName?: string;
   isForked?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -57,7 +63,16 @@ export default function HomePage() {
       if (search) params.append('search', search);
       params.append('limit', '30');
       
-      const res = await fetch(`/api/persona-instance/public?${params.toString()}`);
+      // 如果用户已登录，传递token以获取收藏状态
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const res = await fetch(`/api/persona-instance/public?${params.toString()}`, {
+        headers
+      });
       if (res.ok) {
         const data = await res.json();
         setInstances(data.instances || []);
@@ -74,7 +89,7 @@ export default function HomePage() {
   const handleFavorite = async (instanceId: string) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
-      alert('请先登录后再进行此操作');
+      universeToast.warning('请先登录后再进行此操作');
       return;
     }
 
@@ -84,15 +99,21 @@ export default function HomePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        alert('收藏成功！已保存到你的模型实例中');
-        // 可以刷新列表或跳转到个人中心
-        router.push('/me');
+        universeToast.success('收藏成功！已保存到你的模型实例中');
+        // 更新收藏状态
+        setInstances(instances.map(inst => 
+          inst._id === instanceId 
+            ? { ...inst, isFavorited: true }
+            : inst
+        ));
+        // 可以选择刷新列表或只更新状态
+        // router.push('/me');
       } else {
         const data = await res.json();
-        alert(data.message || '收藏失败');
+        universeToast.error(data.message || '收藏失败');
       }
     } catch (err) {
-      alert('收藏失败');
+      universeToast.error('收藏失败');
     }
   };
 
@@ -108,7 +129,8 @@ export default function HomePage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
-        title="公开模型实例" 
+        icon="🤖"
+        title="公开人格模型实例"
         subtitle="探索其他用户创建的公开模型实例，可以查看训练集并收藏进行二次训练"
         actions={
           <Link
@@ -189,12 +211,23 @@ export default function HomePage() {
                     </div>
                     {instance.description && (
                       <div className={`text-xs mt-1 line-clamp-2 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {instance.description}
+                        {instance.description.length > 50 ? instance.description.slice(0, 50) + '...' : instance.description}
                       </div>
                     )}
                     {instance.isForked && instance.originalUserName && (
                       <div className={`text-xs mt-1 ${mode === 'waibi' ? 'text-yellow-400' : 'text-yellow-600'}`}>
                         ✨ 原创作者: {instance.originalUserName}
+                      </div>
+                    )}
+                    {instance.isForked && instance.developerUserName && (
+                      <div className={`text-xs mt-1 ${mode === 'waibi' ? 'text-blue-400' : 'text-blue-600'}`}>
+                        🔧 二创作者: {instance.developerUserName}
+                      </div>
+                    )}
+                    {instance.authorName && (
+                      <div className={`text-xs mt-1 flex items-center gap-1 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <span>👤</span>
+                        <span>作者: {instance.authorName}</span>
                       </div>
                     )}
                   </div>
@@ -234,12 +267,25 @@ export default function HomePage() {
                 <div className="flex items-center gap-2 text-xs opacity-60">
                   <span>{formatDate(instance.updatedAt)}</span>
                 </div>
-                <button
-                  onClick={() => handleFavorite(instance._id)}
-                  className={`px-3 py-1 rounded text-sm transition ${accentBtn} text-white`}
-                >
-                  收藏
-                </button>
+                {instance.isFavorited ? (
+                  <button
+                    disabled
+                    className={`px-3 py-1 rounded text-sm transition ${
+                      mode === 'waibi' 
+                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    已收藏
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleFavorite(instance._id)}
+                    className={`px-3 py-1 rounded text-sm transition ${accentBtn} text-white`}
+                  >
+                    收藏
+                  </button>
+                )}
               </div>
             </div>
           ))}

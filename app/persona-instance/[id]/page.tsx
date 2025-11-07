@@ -8,6 +8,8 @@ import PersonaChat from '@/components/persona-chat';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import ModelParameters from '@/components/model-parameters';
 import UniverseStatus from '@/components/universe-status';
+import { universeToast } from '@/components/universe-toast';
+import { universeConfirm } from '@/components/universe-confirm';
 
 export interface ModelParams {
   temperature: number;
@@ -47,10 +49,14 @@ interface PersonaInstance {
   isForked?: boolean;
   isInvalid?: boolean;
   modifiedAt?: string;
+  // 收藏状态
+  isFavorited?: boolean;
   // 开发层级相关字段
   developmentLevel?: number;
   originalUserId?: string;
   originalUserName?: string;
+  developerUserId?: string;
+  developerUserName?: string;
   forkChain?: string[];
   createdAt: string;
   updatedAt: string;
@@ -68,6 +74,8 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
   const [model, setModel] = useState<string>('gpt-4o-mini');
   const [saving, setSaving] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [isForkedInstance, setIsForkedInstance] = useState(false); // 是否是收藏的实例
+  const [isFavorited, setIsFavorited] = useState(false); // 是否已收藏
   const [favoriting, setFavoriting] = useState(false);
 
   // 编辑表单状态
@@ -120,7 +128,12 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
           const currentUserId = token ? (await fetch('/api/auth/me', { 
             headers: { Authorization: `Bearer ${token}` } 
           }).then(r => r.json()).then(d => d?.user?.userId).catch(() => null)) : null;
-          setIsOwner(currentUserId === data.instance.userId);
+          const owner = currentUserId === data.instance.userId;
+          setIsOwner(owner);
+          // 检查是否是收藏的实例（isForked && sourceInstanceId 存在）
+          setIsForkedInstance(data.instance.isForked === true && !!data.instance.sourceInstanceId && owner);
+          // 设置收藏状态
+          setIsFavorited(data.instance.isFavorited === true);
           
           setEditForm({
             name: data.instance.name || '',
@@ -168,17 +181,21 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
         setActiveTab('preview');
       } else {
         const data = await res.json();
-        alert(data.message || '保存失败');
+        universeToast.error(data.message || '保存失败');
       }
     } catch (err) {
-      alert('保存失败');
+      universeToast.error('保存失败');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('确定要删除这个模型实例吗？此操作不可恢复。')) return;
+    const confirmed = await universeConfirm.confirm(
+      '确定要删除这个模型实例吗？此操作不可恢复。',
+      { type: 'danger', title: '删除模型实例', confirmText: '删除', cancelText: '取消' }
+    );
+    if (!confirmed) return;
     try {
       const res = await fetchWithAuth(`/api/persona-instance/${id}`, {
         method: 'DELETE'
@@ -187,17 +204,17 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
         router.push('/me');
       } else {
         const data = await res.json();
-        alert(data.message || '删除失败');
+        universeToast.error(data.message || '删除失败');
       }
     } catch (err) {
-      alert('删除失败');
+      universeToast.error('删除失败');
     }
   };
 
   const handleFavorite = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
-      alert('请先登录后再进行此操作');
+      universeToast.warning('请先登录后再进行此操作');
       return;
     }
 
@@ -208,14 +225,16 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
       });
       if (res.ok) {
         const data = await res.json();
-        alert('收藏成功！已保存到你的模型实例中');
-        router.push('/me');
+        universeToast.success('收藏成功！已保存到你的模型实例中');
+        setIsFavorited(true); // 更新收藏状态
+        // 可以选择刷新页面或只更新状态
+        // router.push('/me');
       } else {
         const data = await res.json();
-        alert(data.message || '收藏失败');
+        universeToast.error(data.message || '收藏失败');
       }
     } catch (err) {
-      alert('收藏失败');
+      universeToast.error('收藏失败');
     } finally {
       setFavoriting(false);
     }
@@ -268,7 +287,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
         </div>
         {instance.description && (
           <p className={`mt-2 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-600'}`}>
-            {instance.description}
+            {instance.description.length > 50 ? instance.description.slice(0, 50) + '...' : instance.description}
           </p>
         )}
         {instance.isForked && instance.originalUserName && (
@@ -280,6 +299,11 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
             <div className={`text-sm font-medium ${mode === 'waibi' ? 'text-yellow-300' : 'text-yellow-700'}`}>
               ✨ 原创作者: <span className="font-bold">{instance.originalUserName}</span>
             </div>
+            {instance.developerUserName && (
+              <div className={`text-sm mt-1 ${mode === 'waibi' ? 'text-blue-300' : 'text-blue-700'}`}>
+                🔧 二创作者: <span className="font-bold">{instance.developerUserName}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -303,12 +327,20 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
             )}
           </button>
         )}
-        {isOwner && (
+        {isOwner && !isForkedInstance && (
           <button
             onClick={() => setActiveTab('edit')}
             className={`px-4 py-2 rounded-lg transition ${activeTab === 'edit' ? accentBtn + ' text-white' : secondaryBtn}`}
           >
             编辑信息
+          </button>
+        )}
+        {isForkedInstance && (
+          <button
+            onClick={() => router.push(`/persona-instance/create?template=${id}`)}
+            className={`px-4 py-2 rounded-lg transition ${accentBtn} text-white`}
+          >
+            二次开发
           </button>
         )}
         <button
@@ -319,13 +351,26 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
         </button>
         <div className="flex-1"></div>
         {!isOwner && instance.isPublic && (
-          <button
-            onClick={handleFavorite}
-            disabled={favoriting}
-            className={`px-4 py-2 rounded-lg transition text-white ${accentBtn} disabled:opacity-50`}
-          >
-            {favoriting ? '收藏中...' : '收藏'}
-          </button>
+          isFavorited ? (
+            <button
+              disabled
+              className={`px-4 py-2 rounded-lg transition ${
+                mode === 'waibi' 
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              已收藏
+            </button>
+          ) : (
+            <button
+              onClick={handleFavorite}
+              disabled={favoriting}
+              className={`px-4 py-2 rounded-lg transition text-white ${accentBtn} disabled:opacity-50`}
+            >
+              {favoriting ? '收藏中...' : '收藏'}
+            </button>
+          )
         )}
         {isOwner && (
           <button
@@ -573,6 +618,11 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                 {instance.originalUserName && (
                   <div className={`text-sm ${mode === 'waibi' ? 'text-yellow-300' : 'text-yellow-700'}`}>
                     ✨ 原创作者: <span className="font-bold">{instance.originalUserName}</span>
+                  </div>
+                )}
+                {instance.developerUserName && (
+                  <div className={`text-sm mt-1 ${mode === 'waibi' ? 'text-blue-300' : 'text-blue-700'}`}>
+                    🔧 二创作者: <span className="font-bold">{instance.developerUserName}</span>
                   </div>
                 )}
                 {instance.sourceUserId && instance.sourceUserId !== instance.originalUserId && (

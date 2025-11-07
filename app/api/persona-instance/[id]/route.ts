@@ -57,6 +57,24 @@ export async function GET(
       instance.trainingSetVisible = true;
     }
 
+    // 如果用户已登录且不是自己的实例，检查是否已被收藏
+    if (payload && instance.userId !== payload.userId && instance.isPublic) {
+      try {
+        const favoritedInstance = await PersonaInstance.findOne({
+          userId: payload.userId,
+          sourceInstanceId: id,
+          isForked: true
+        }).lean() as any;
+        
+        instance.isFavorited = !!favoritedInstance;
+      } catch (err) {
+        console.error('[persona-instance] 检查收藏状态失败:', err);
+        instance.isFavorited = false;
+      }
+    } else {
+      instance.isFavorited = false;
+    }
+
     return NextResponse.json({ instance });
   } catch (error: any) {
     console.error('[persona-instance] 获取实例失败:', error);
@@ -102,6 +120,11 @@ export async function PUT(
     const currentInstance = await PersonaInstance.findOne({ _id: id, userId: payload.userId }).lean() as any;
     if (!currentInstance) {
       return NextResponse.json({ message: '实例不存在' }, { status: 404 });
+    }
+
+    // 如果是收藏的实例（isForked && sourceInstanceId），不允许编辑
+    if (currentInstance.isForked && currentInstance.sourceInstanceId) {
+      return NextResponse.json({ message: '收藏的模型实例不允许编辑，只能进行二次开发' }, { status: 403 });
     }
 
     const updateData: any = {};

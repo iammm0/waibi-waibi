@@ -73,6 +73,17 @@ export async function POST(
       }
     }
 
+    // 获取二创作者信息（当前用户）
+    let developerUserName = '';
+    try {
+      const developerUser = await User.findOne({ userId: payload.userId }).select('username name').lean() as any;
+      if (developerUser) {
+        developerUserName = developerUser.username || developerUser.name || '';
+      }
+    } catch (err) {
+      console.error('[persona-instance/favorite] 获取二创作者信息失败:', err);
+    }
+
     // 创建收藏实例（复制）
     const forkedInstance = new PersonaInstance({
       userId: payload.userId,
@@ -104,6 +115,8 @@ export async function POST(
       developmentLevel,
       originalUserId,
       originalUserName,
+      developerUserId: payload.userId, // 二创作者ID（当前用户）
+      developerUserName, // 二创作者名称
       forkChain
     });
 

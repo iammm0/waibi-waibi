@@ -16,6 +16,12 @@ interface PersonaInstance {
   personaCode?: string;
   avatarUrl?: string;
   tags?: string[];
+  // 作者信息
+  authorName?: string;
+  // 开发层级相关字段
+  isForked?: boolean;
+  originalUserName?: string;
+  developerUserName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +73,7 @@ export default function PublicPersonaInstancePage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
+        icon="🌌"
         title="公开人格模型实例"
         subtitle="探索其他用户创建的公开模型实例" 
       />
@@ -130,7 +137,23 @@ export default function PublicPersonaInstancePage() {
                         <div className="font-semibold truncate">{instance.name}</div>
                         {instance.description && (
                           <div className={`text-xs mt-1 line-clamp-2 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {instance.description}
+                            {instance.description.length > 50 ? instance.description.slice(0, 50) + '...' : instance.description}
+                          </div>
+                        )}
+                        {instance.isForked && instance.originalUserName && (
+                          <div className={`text-xs mt-1 ${mode === 'waibi' ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                            ✨ 原创作者: {instance.originalUserName}
+                          </div>
+                        )}
+                        {instance.isForked && instance.developerUserName && (
+                          <div className={`text-xs mt-1 ${mode === 'waibi' ? 'text-blue-400' : 'text-blue-600'}`}>
+                            🔧 二创作者: {instance.developerUserName}
+                          </div>
+                        )}
+                        {instance.authorName && (
+                          <div className={`text-xs mt-1 flex items-center gap-1 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <span>👤</span>
+                            <span className="truncate">作者: {instance.authorName}</span>
                           </div>
                         )}
                         {instance.tags && instance.tags.length > 0 && (
