@@ -147,10 +147,10 @@ export function UniverseConfirmContainer() {
   useEffect(() => {
     // 监听全局 confirm 事件
     const handleShowConfirm = (event: CustomEvent<ConfirmDialog & { resolve: (value: boolean) => void }>) => {
-      const { resolve, ...dialogData } = event.detail;
+      const { resolve, id: _, ...dialogData } = event.detail;
       const newDialog: ConfirmDialog = {
-        id: `confirm-${Date.now()}-${Math.random()}`,
         ...dialogData,
+        id: `confirm-${Date.now()}-${Math.random()}`,
         onConfirm: () => resolve(true),
         onCancel: () => resolve(false),
       };

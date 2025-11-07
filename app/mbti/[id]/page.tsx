@@ -9,6 +9,7 @@ import TrainingStatus from '@/components/training-status';
 import TrainingPreview from '@/components/training-preview';
 import { getPersonalityById } from '@/lib/mbti';
 import { fetchWithAuth } from '@/lib/auth-utils';
+import { universeToast } from '@/components/universe-toast';
 
 export interface ModelParams {
   temperature: number;

@@ -3,6 +3,7 @@ import { verifyAccessToken } from '@/lib/jwt';
 import { connectToDatabase } from '@/lib/db';
 import PersonaInstance from '@/model/PersonaInstance';
 import TrainingSample from '@/model/TrainingSample';
+import User from '@/model/User';
 
 // 获取用户的所有模型实例
 export async function GET(req: NextRequest) {
