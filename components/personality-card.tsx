@@ -2,8 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Personality } from '@/lib/mbti';
+import ProgressiveImage from './progressive-image';
 
 type Focus = 'top' | 'center' | 'bottom';
 type Props = Personality & {
@@ -22,19 +22,16 @@ export default function PersonalityCard({
                                             focal,
                                         }: Props) {
     // Image 的 object-position
-    const focusClass =
-        focal
-            ? `object-[${focal[0]}%_${focal[1]}%]`
-            : focus === 'top'
-                ? 'object-top'
-                : focus === 'bottom'
-                    ? 'object-bottom'
-                    : 'object-center';
+    const objectPosition = focal
+        ? `${focal[0]}% ${focal[1]}%`
+        : focus === 'top'
+            ? 'top'
+            : focus === 'bottom'
+                ? 'bottom'
+                : 'center';
 
     // 移动端用 contain 避免裁剪；到 md 再切回 cover
-    const fitClass = containOnMobile
-        ? 'object-contain md:object-cover'
-        : 'object-cover';
+    const objectFit = containOnMobile ? 'contain' : 'cover';
 
     return (
         <Link
@@ -43,14 +40,16 @@ export default function PersonalityCard({
             prefetch
         >
             <div className="border rounded-xl overflow-hidden shadow-sm hover:shadow-lg bg-white dark:bg-gray-800 transition">
-                {/* 👇 用“纵横比”而不是固定高度，移动端能多露出上半身 */}
+                {/* 👇 用"纵横比"而不是固定高度，移动端能多露出上半身 */}
                 <div className="relative aspect-[4/3] md:aspect-[16/10] bg-gray-100 dark:bg-gray-700">
-                    <Image
+                    <ProgressiveImage
                         src={image}
                         alt={name}
                         fill
                         sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
-                        className={`${fitClass} ${focusClass} transition-transform duration-200 group-hover:scale-[1.03]`}
+                        className="transition-transform duration-200 group-hover:scale-[1.03]"
+                        objectFit={objectFit}
+                        objectPosition={objectPosition}
                         priority={false}
                     />
                 </div>

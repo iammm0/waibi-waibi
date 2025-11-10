@@ -14,10 +14,10 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [rotation, setRotation] = useState(0);
-  const [scale, setScale] = useState(1);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
+  const [scale, setScale] = useState(1); // 缩放比例
+  const [rotation, setRotation] = useState(0); // 旋转角度（度）
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -57,44 +57,67 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
       return;
     }
 
-    // 计算图像尺寸以适应canvas
+    // 计算图像尺寸以适应裁剪框（保持宽高比，覆盖整个区域）
     const imageAspect = image.width / image.height;
-    let drawWidth = canvasSize * 0.8 * scale;
-    let drawHeight = canvasSize * 0.8 * scale;
+    const cropSize = outputSize;
+    let drawWidth = cropSize;
+    let drawHeight = cropSize;
     
     if (imageAspect > 1) {
-      drawHeight = drawWidth / imageAspect;
+      // 横向图片，高度固定，宽度按比例
+      drawHeight = cropSize;
+      drawWidth = cropSize * imageAspect;
     } else {
-      drawWidth = drawHeight * imageAspect;
+      // 纵向或正方形图片，宽度固定，高度按比例
+      drawWidth = cropSize;
+      drawHeight = cropSize / imageAspect;
     }
 
+    // 应用缩放
+    drawWidth *= scale;
+    drawHeight *= scale;
+
+    // 保存上下文状态
     ctx.save();
-    ctx.translate(canvasSize / 2, canvasSize / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(offsetX, offsetY);
+
+    // 移动到画布中心并应用旋转
+    const centerX = canvasSize / 2 + offsetX;
+    const centerY = canvasSize / 2 + offsetY;
     
-    ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+    ctx.translate(centerX, centerY);
+    ctx.rotate((rotation * Math.PI) / 180);
+    
+    // 绘制图片（居中）
+    ctx.drawImage(
+      image,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+
+    // 恢复上下文状态
     ctx.restore();
 
     // 绘制裁剪框
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 2;
-    const cropSize = outputSize;
     const cropX = (canvasSize - cropSize) / 2;
     const cropY = (canvasSize - cropSize) / 2;
     ctx.strokeRect(cropX, cropY, cropSize, cropSize);
-  }, [image, rotation, scale, offsetX, offsetY, mode]);
+  }, [image, offsetX, offsetY, scale, rotation, mode]);
 
   useEffect(() => {
     drawCanvas();
   }, [drawCanvas]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('请选择图片文件');
+      const { universeToast } = await import('@/components/universe-toast');
+      universeToast.warning('请选择图片文件');
       return;
     }
 
@@ -103,18 +126,20 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
       const img = new Image();
       img.onload = () => {
         setImage(img);
-        setScale(1);
-        setRotation(0);
         setOffsetX(0);
         setOffsetY(0);
+        setScale(1);
+        setRotation(0);
       };
-      img.onerror = () => {
-        alert('图片加载失败，请选择其他图片');
+      img.onerror = async () => {
+        const { universeToast } = await import('@/components/universe-toast');
+        universeToast.error('图片加载失败，请选择其他图片');
       };
       img.src = event.target?.result as string;
     };
-    reader.onerror = () => {
-      alert('文件读取失败');
+    reader.onerror = async () => {
+      const { universeToast } = await import('@/components/universe-toast');
+      universeToast.error('文件读取失败');
     };
     reader.readAsDataURL(file);
   };
@@ -144,14 +169,11 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
     setIsDragging(false);
   };
 
-  const rotateLeft = () => setRotation((prev) => prev - 90);
-  const rotateRight = () => setRotation((prev) => prev + 90);
-  const zoomIn = () => setScale((prev) => Math.min(prev * 1.2, 3));
-  const zoomOut = () => setScale((prev) => Math.max(prev / 1.2, 0.5));
 
   const handleSave = async () => {
     if (!image) {
-      alert('请先上传图片');
+      const { universeToast } = await import('@/components/universe-toast');
+      universeToast.warning('请先上传图片');
       return;
     }
 
@@ -161,37 +183,71 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
     const ctx = outputCanvas.getContext('2d');
     if (!ctx) return;
 
-    // 计算图像在预览canvas中的尺寸
+    // 计算图像尺寸（与预览canvas中相同）
     const imageAspect = image.width / image.height;
-    let previewWidth = canvasSize * 0.8 * scale;
-    let previewHeight = canvasSize * 0.8 * scale;
+    const cropSize = outputSize;
+    let drawWidth = cropSize;
+    let drawHeight = cropSize;
     
     if (imageAspect > 1) {
-      previewHeight = previewWidth / imageAspect;
+      drawHeight = cropSize;
+      drawWidth = cropSize * imageAspect;
     } else {
-      previewWidth = previewHeight * imageAspect;
+      drawWidth = cropSize;
+      drawHeight = cropSize / imageAspect;
     }
 
-    // 计算在输出canvas中的尺寸（保持比例）
-    const scaleRatio = outputSize / (canvasSize * 0.8);
-    let outputWidth = previewWidth * scaleRatio;
-    let outputHeight = previewHeight * scaleRatio;
+    // 应用缩放
+    drawWidth *= scale;
+    drawHeight *= scale;
 
-    // 计算偏移量（从预览canvas映射到输出canvas）
-    const offsetRatio = outputSize / (canvasSize * 0.8);
-    const outputOffsetX = offsetX * offsetRatio;
-    const outputOffsetY = offsetY * offsetRatio;
+    // 计算偏移量（从预览canvas映射到输出canvas，比例1:1）
+    const outputOffsetX = offsetX;
+    const outputOffsetY = offsetY;
 
+    // 保存上下文状态
     ctx.save();
-    ctx.translate(outputSize / 2, outputSize / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(outputOffsetX, outputOffsetY);
+
+    // 移动到画布中心并应用旋转
+    const centerX = outputSize / 2 + outputOffsetX;
+    const centerY = outputSize / 2 + outputOffsetY;
     
-    ctx.drawImage(image, -outputWidth / 2, -outputHeight / 2, outputWidth, outputHeight);
+    ctx.translate(centerX, centerY);
+    ctx.rotate((rotation * Math.PI) / 180);
+    
+    // 绘制图片（居中）
+    ctx.drawImage(
+      image,
+      -drawWidth / 2,
+      -drawHeight / 2,
+      drawWidth,
+      drawHeight
+    );
+
+    // 恢复上下文状态
     ctx.restore();
 
     const imageData = outputCanvas.toDataURL('image/png');
     await onSave(imageData);
+  };
+
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev + 0.1, 3)); // 最大3倍
+  };
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev - 0.1, 0.3)); // 最小0.3倍
+  };
+
+  const handleRotate = () => {
+    setRotation(prev => (prev + 90) % 360);
+  };
+
+  const handleReset = () => {
+    setOffsetX(0);
+    setOffsetY(0);
+    setScale(1);
+    setRotation(0);
   };
 
   return (
@@ -229,26 +285,82 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
           />
         </div>
 
-        <div className="mb-4 flex gap-2 justify-center flex-wrap">
-          <button onClick={rotateLeft} className={`px-3 py-2 rounded ${inputClass}`}>
-            左旋转
-          </button>
-          <button onClick={rotateRight} className={`px-3 py-2 rounded ${inputClass}`}>
-            右旋转
-          </button>
-          <button onClick={zoomIn} className={`px-3 py-2 rounded ${inputClass}`}>
-            放大
-          </button>
-          <button onClick={zoomOut} className={`px-3 py-2 rounded ${inputClass}`}>
-            缩小
-          </button>
+        {/* 控制面板 */}
+        {image && (
+          <div className="mb-4 space-y-4">
+            {/* 缩放控制 */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">缩放: {Math.round(scale * 100)}%</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleZoomOut}
+                    disabled={scale <= 0.3}
+                    className={`px-3 py-1 rounded text-sm ${accentBtn} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    −
+                  </button>
+                  <button
+                    onClick={handleZoomIn}
+                    disabled={scale >= 3}
+                    className={`px-3 py-1 rounded text-sm ${accentBtn} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <input
+                type="range"
+                min="0.3"
+                max="3"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                style={{
+                  background: mode === 'waibi' 
+                    ? `linear-gradient(to right, #22c55e 0%, #22c55e ${((scale - 0.3) / 2.7) * 100}%, #333 ${((scale - 0.3) / 2.7) * 100}%, #333 100%)`
+                    : `linear-gradient(to right, var(--accent-cyan) 0%, var(--accent-cyan) ${((scale - 0.3) / 2.7) * 100}%, #ddd ${((scale - 0.3) / 2.7) * 100}%, #ddd 100%)`
+                }}
+              />
+            </div>
+
+            {/* 旋转控制 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">旋转: {rotation}°</label>
+              <button
+                onClick={handleRotate}
+                className={`px-4 py-2 rounded text-sm ${accentBtn} text-white`}
+              >
+                🔄 旋转 90°
+              </button>
+            </div>
+
+            {/* 重置按钮 */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleReset}
+                className={`px-3 py-1 rounded text-sm ${inputClass}`}
+              >
+                🔄 重置
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-4 text-center text-sm opacity-70">
+          拖拽图片调整位置，使用滑块缩放，对齐绿色框
         </div>
 
         <div className="flex gap-2 justify-end">
           <button onClick={onCancel} className={`px-4 py-2 rounded ${inputClass}`}>
             取消
           </button>
-          <button onClick={handleSave} className={`px-4 py-2 rounded text-white ${accentBtn}`}>
+          <button 
+            onClick={handleSave} 
+            disabled={!image}
+            className={`px-4 py-2 rounded text-white ${accentBtn} disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
             保存
           </button>
         </div>

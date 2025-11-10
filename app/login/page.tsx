@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVibe } from '@/app/providers';
+import { universeToast } from '@/components/universe-toast';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function AuthPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || '重置失败');
-      alert('密码重置成功，请使用新密码登录');
+      universeToast.success('密码重置成功，请使用新密码登录');
       setModeForm('login');
       setResetToken('');
       setForm({ identifier: '', email: '', phone: '', password: '', confirmPassword: '', newPassword: '', confirmNewPassword: '' });

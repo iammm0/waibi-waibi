@@ -17,9 +17,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ code: s
 
   const { code: rawCode } = await context.params;
   const code = rawCode.toLowerCase();
+  // 获取所有历史交互记录（不限制数量）
   const items = await Interaction.find({ userId: payload.userId, personaCode: code })
     .sort({ updatedAt: -1 })
-    .limit(50)
     .lean();
   // 隐藏 system 提示词消息，不返回给前端
   const sanitized = items.map((it: any) => ({

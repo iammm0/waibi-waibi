@@ -1,14 +1,14 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 import { useVibe } from "@/app/providers";
 import Logo from "./logo";
-import { FaMoon, FaSun } from "react-icons/fa";
+import { FaMoon, FaSun, FaEnvelope, FaUser, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
 import Link from "next/link";
 
 const navItems = [
-  { href: "/", label: "首页" },
+  { href: "/", label: "开放实例" },
   { href: "/guestbook", label: "留言板" },
   { href: "/chat", label: "聊一聊" },
   { href: "/mbti", label: "训练" },
@@ -31,22 +31,72 @@ type Me = { user: { userId: string; username?: string; name?: string; avatarUrl?
 
 export default function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const { mode, toggleMode } = useVibe();
   const [mounted, setMounted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [activeIndex, setActiveIndex] = useState<string | null>(null);
   const [me, setMe] = useState<Me["user"] | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    if (!token) { setMe(null); return; }
+    if (!token) { 
+      setMe(null); 
+      setUnreadCount(0);
+      return; 
+    }
     fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(async (r) => (r.ok ? r.json() : null))
-      .then((data: Me | null) => setMe(data?.user || null))
-      .catch(() => setMe(null));
+      .then((data: Me | null) => {
+        setMe(data?.user || null);
+        // 获取未读信件数量
+        if (data?.user) {
+          fetch('/api/letters?limit=100', { headers: { Authorization: `Bearer ${token}` } })
+            .then(async (r) => (r.ok ? r.json() : null))
+            .then((letterData: any) => {
+              if (letterData?.letters) {
+                const unread = letterData.letters.filter((l: any) => l.isRead === false).length;
+                setUnreadCount(unread);
+              }
+            })
+            .catch(() => setUnreadCount(0));
+        }
+      })
+      .catch(() => {
+        setMe(null);
+        setUnreadCount(0);
+      });
   }, [pathname]);
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    setMe(null);
+    setShowDropdown(false);
+    router.push('/');
+  };
 
   const handleScramble = (href: string) => {
     if (activeIndex === href) return;
@@ -110,34 +160,107 @@ export default function Navigation() {
             </ul>
           </nav>
 
-          {/* 右：用户信息 + 主题按钮（按钮永远最右） */}
+          {/* 右：用户信息（下拉菜单） */}
           <div className="ml-auto shrink-0 flex items-center gap-2">
             {me ? (
-              <Link href="/me" className="flex items-center gap-2">
-                <img
-                  src={me.avatarUrl || "/favicon.ico"}
-                  alt={me.username || me.name || "avatar"}
-                  className="h-8 w-8 rounded-full object-cover border"
-                />
-                <span className="text-sm font-semibold hidden sm:inline">{me.username || me.name}</span>
-              </Link>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  aria-label="用户菜单"
+                >
+                  <img
+                    src={me.avatarUrl || "/favicon.ico"}
+                    alt={me.username || me.name || "avatar"}
+                    className="h-8 w-8 rounded-full object-cover border"
+                  />
+                  <span className="text-sm font-semibold hidden sm:inline">{me.username || me.name}</span>
+                  <FaChevronDown className={`text-xs transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* 下拉菜单 */}
+                {showDropdown && (
+                  <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-50 ${
+                    mode === "waibi"
+                      ? "bg-black/90 border-white/20 text-white"
+                      : "bg-white border-gray-200 text-gray-900"
+                  }`}>
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push('/inbox');
+                          setShowDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity relative ${
+                          mode === "waibi" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <FaEnvelope className="text-sm" />
+                        收件箱
+                        {unreadCount > 0 && (
+                          <span className={`ml-auto px-1.5 py-0.5 rounded-full text-xs font-bold ${
+                            mode === "waibi" ? "bg-red-500 text-white" : "bg-red-500 text-white"
+                          }`}>
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push('/me');
+                          setShowDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity ${
+                          mode === "waibi" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <FaUser className="text-sm" />
+                        个人主页
+                      </button>
+                      <div className={`border-t my-1 ${
+                        mode === "waibi" ? "border-white/20" : "border-gray-200"
+                      }`} />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          toggleMode();
+                          setShowDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity ${
+                          mode === "waibi" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                        }`}
+                        suppressHydrationWarning
+                      >
+                        {mode === "waibi" ? <FaSun className="text-sm" /> : <FaMoon className="text-sm" />}
+                        {mode === "waibi" ? "切换到理智模式" : "切换到歪比模式"}
+                      </button>
+                      <div className={`border-t my-1 ${
+                        mode === "waibi" ? "border-white/20" : "border-gray-200"
+                      }`} />
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity ${
+                          mode === "waibi" 
+                            ? "hover:bg-red-500/20 text-red-400" 
+                            : "hover:bg-red-50 text-red-600"
+                        }`}
+                      >
+                        <FaSignOutAlt className="text-sm" />
+                        退出登录
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link href="/login" className="text-sm font-semibold text-[var(--accent-cyan)]">
                 登录
               </Link>
             )}
-
-            {/* 主题按钮放最后，确保最右 */}
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="badge glitch-hover flex items-center gap-2"
-              aria-pressed={mode === "waibi"}
-              aria-label="切换歪比/理智模式"
-              suppressHydrationWarning
-            >
-              {mode === "waibi" ? <FaSun className="text-l" /> : <FaMoon className="text-l" />}
-            </button>
           </div>
         </div>
 

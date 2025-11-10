@@ -103,15 +103,28 @@ button {
 
 
 /* ==================== 布局优化 ==================== */
+:root {
+  --nav-height: 73px; /* 桌面端导航栏高度 */
+  --nav-height-mobile: 123px; /* 移动端导航栏高度（包含二级导航） */
+  --footer-height: 80px; /* Footer高度 */
+}
+
 main {
   width: min(94vw);
   margin-inline: auto;
-  padding-block: clamp(3rem, 4vw, 4rem);
+  padding-block: clamp(1rem, 1vw, 1rem);
 
   @media (max-width: 768px) {
     width: min(640px, 92vw);
-    padding-block: 2.5rem;
+    padding-block: 1rem;
   }
+}
+
+/* 聊天页面特殊处理：占满整个页面 */
+main:has([data-chat-page]) {
+  padding-block: 0;
+  width: 100vw;
+  margin-inline: 0;
 }
 
 

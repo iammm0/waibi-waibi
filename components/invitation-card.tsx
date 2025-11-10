@@ -25,7 +25,7 @@ export default function InvitationCard() {
 
   return (
     <Link 
-      href="/about"
+      href="/"
       className={`fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 transition-all duration-300 ${
         isHovered ? 'scale-105 ' + glowClass : 'hover:scale-105'
       }`}
@@ -39,13 +39,13 @@ export default function InvitationCard() {
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-base sm:text-lg mb-2 pixel-text">
-              waibi宇宙邀请函
+              歪比宇宙信件
             </h3>
             <p className="text-xs sm:text-sm opacity-80 leading-relaxed">
-              点击了解waibi宇宙的奥秘...
+              查看来自歪比宇宙的信件和更新...
             </p>
             <div className="mt-2 sm:mt-3 flex items-center gap-2 text-xs opacity-60">
-              <span>探索宇宙 →</span>
+              <span>查看信件 →</span>
             </div>
           </div>
         </div>
