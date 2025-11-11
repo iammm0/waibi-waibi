@@ -145,6 +145,29 @@ export default function HomePage() {
         }
       />
 
+      {/* 新手指南提示 */}
+      {!loading && (
+        <div className={`${panelClass} rounded-xl p-4 mb-6 border-2 ${
+          mode === 'waibi' ? 'border-green-500/50' : 'border-[var(--accent-cyan)]/50'
+        }`}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📚</span>
+              <div>
+                <div className="font-semibold mb-1">初次使用？</div>
+                <div className="text-sm opacity-80">查看完整教程，快速上手创建和训练模型实例</div>
+              </div>
+            </div>
+            <Link
+              href="/tutorial"
+              className={`px-4 py-2 rounded-lg font-semibold transition-all ${accentBtn} hover:scale-105 whitespace-nowrap`}
+            >
+              查看教程 →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* 搜索框 */}
       <div className={`rounded-xl shadow-md p-4 mt-6 mb-6 ${panelClass}`}>
         <input
