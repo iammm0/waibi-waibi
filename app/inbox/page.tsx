@@ -78,9 +78,9 @@ export default function InboxPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
-        icon="📭"
+        icon="✉️"
         title="收件箱" 
-        subtitle="来自歪比宇宙的信件，记录着我们的故事与思考" 
+        subtitle="来自歪比宇宙的信件，记录着我们的故事与思考。点击信件卡片查看详情，未读信件会有红色标识" 
       />
 
       {loading ? (
@@ -95,12 +95,15 @@ export default function InboxPage() {
         />
       ) : letters.length === 0 ? (
         <div className={`text-center py-12 rounded-xl ${panelClass}`}>
-          <div className="text-6xl mb-4">📭</div>
+          <div className="text-6xl mb-4">✉️</div>
           <div className={`text-lg ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>
             暂无信件
           </div>
           <p className={`text-sm mt-2 opacity-70 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-600'}`}>
             来自歪比宇宙的信件正在路上...
+          </p>
+          <p className={`text-xs mt-4 opacity-60 ${mode === 'waibi' ? 'text-gray-500' : 'text-gray-500'}`}>
+            当有新的信件时，导航栏的收件箱图标会显示未读数量
           </p>
         </div>
       ) : (
@@ -108,12 +111,21 @@ export default function InboxPage() {
           {letters.map((letter) => (
             <div
               key={letter.letterId}
-              className={`rounded-xl shadow-md p-5 cursor-pointer transition-all relative ${cardClass}`}
+              className={`rounded-xl shadow-md p-5 cursor-pointer transition-all relative ${cardClass} hover:scale-[1.02]`}
               onClick={() => router.push(`/letters/${letter.letterId}`)}
             >
-              {/* 未读标识小红点 */}
+              {/* 未读标识 */}
               {letter.isRead === false && (
-                <div className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <>
+                  <div className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                  <div className={`absolute top-2 left-2 px-2 py-1 rounded text-xs font-semibold ${
+                    mode === 'waibi' 
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
+                      : 'bg-red-100 text-red-700 border border-red-300'
+                  }`}>
+                    未读
+                  </div>
+                </>
               )}
               
               <div className="flex items-start justify-between mb-3">
