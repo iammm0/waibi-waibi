@@ -11,6 +11,15 @@ export async function initLetters() {
     
     console.log('[letters] 开始初始化/更新歪比宇宙信件...');
 
+    // 计算错开的发布时间（从十月初开始，间隔几天）
+    // 项目从2024年10月初开始
+    const projectStartDate = new Date('2024-10-01');
+    const getPublishedDate = (daysAfterStart: number) => {
+      const date = new Date(projectStartDate);
+      date.setDate(date.getDate() + daysAfterStart);
+      return date;
+    };
+
     const letters = [
       {
         letterId: 'letter-001',
@@ -36,7 +45,7 @@ export async function initLetters() {
         tags: ['欢迎', '介绍'],
         isPublished: true,
         priority: 100,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(0), // 项目开始日（10月1日）
       },
       {
         letterId: 'letter-002',
@@ -61,7 +70,7 @@ export async function initLetters() {
         tags: ['订阅', '新功能'],
         isPublished: true,
         priority: 90,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(5), // 10月6日
       },
       {
         letterId: 'letter-003',
@@ -90,7 +99,7 @@ export async function initLetters() {
         tags: ['导入', '训练', '微信'],
         isPublished: true,
         priority: 85,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(10), // 10月11日
       },
       {
         letterId: 'letter-004',
@@ -118,7 +127,7 @@ export async function initLetters() {
         tags: ['训练', '优化'],
         isPublished: true,
         priority: 80,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(15), // 10月16日
       },
       {
         letterId: 'letter-005',
@@ -145,7 +154,7 @@ export async function initLetters() {
         tags: ['训练集', '隐私', '可见性'],
         isPublished: true,
         priority: 95,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(20), // 10月21日
       },
       {
         letterId: 'letter-006',
@@ -173,7 +182,7 @@ export async function initLetters() {
         tags: ['二次开发', '原创', '标识'],
         isPublished: true,
         priority: 94,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(25), // 10月26日
       },
       {
         letterId: 'letter-007',
@@ -201,7 +210,7 @@ export async function initLetters() {
         tags: ['界面', '导航', '用户体验'],
         isPublished: true,
         priority: 88,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(30), // 10月31日
       },
       {
         letterId: 'letter-008',
@@ -237,7 +246,7 @@ export async function initLetters() {
         tags: ['留言板', '布局', '分页'],
         isPublished: true,
         priority: 87,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(35), // 11月5日
       },
       {
         letterId: 'letter-009',
@@ -270,7 +279,7 @@ export async function initLetters() {
         tags: ['收件箱', '未读', '标识'],
         isPublished: true,
         priority: 93,
-        publishedAt: new Date(),
+        publishedAt: getPublishedDate(40), // 11月10日
       },
     ];
 
