@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useVibe } from "@/app/providers";
 import Logo from "./logo";
-import { FaMoon, FaSun, FaEnvelope, FaUser, FaSignOutAlt, FaChevronDown } from "react-icons/fa";
+import { FaMoon, FaSun, FaEnvelope, FaUser, FaSignOutAlt, FaChevronDown, FaRobot, FaBook } from "react-icons/fa";
 import Link from "next/link";
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { href: "/guestbook", label: "留言板" },
   { href: "/chat", label: "聊一聊" },
   { href: "/mbti", label: "训练" },
+  { href: "/tutorial", label: "教程" },
 ];
 
 // 随机打乱文本
@@ -219,6 +220,32 @@ export default function Navigation() {
                       >
                         <FaUser className="text-sm" />
                         个人主页
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push('/me/instances');
+                          setShowDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity ${
+                          mode === "waibi" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <FaRobot className="text-sm" />
+                        模型实例管理
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push('/me/training-samples');
+                          setShowDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:opacity-80 transition-opacity ${
+                          mode === "waibi" ? "hover:bg-white/10" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <FaBook className="text-sm" />
+                        训练集管理
                       </button>
                       <div className={`border-t my-1 ${
                         mode === "waibi" ? "border-white/20" : "border-gray-200"
