@@ -14,7 +14,9 @@ export default function MbtiIndexPage() {
     : 'bg-white border border-gray-200 hover:border-gray-300';
   const nameClass = mode === 'waibi' ? 'text-white' : 'text-gray-900';
   const descClass = mode === 'waibi' ? 'text-gray-300' : 'text-gray-600';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
+  const accentBtn = mode === 'waibi' 
+    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-200' 
+    : 'bg-gradient-to-r from-[var(--accent-cyan)] to-cyan-500 hover:brightness-110 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200';
   
   const groups: { [k: string]: string[] } = {
     NT: ['INTJ', 'INTP', 'ENTJ', 'ENTP'],

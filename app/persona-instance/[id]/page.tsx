@@ -87,6 +87,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
     tags: [] as string[],
     isPublic: false,
     isTrainingSetPublic: true,
+    trainingSamples: [] as TrainingSample[],
     modelParams: {
       temperature: 0.7,
       topP: 0.9,
@@ -96,6 +97,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
       learningRate: 0.001
     } as ModelParams
   });
+  const [currentSample, setCurrentSample] = useState<TrainingSample>({ input: '', response: '' });
 
   const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
   const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
@@ -143,6 +145,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
             tags: data.instance.tags || [],
             isPublic: data.instance.isPublic || false,
             isTrainingSetPublic: data.instance.isTrainingSetPublic !== undefined ? data.instance.isTrainingSetPublic : true,
+            trainingSamples: data.instance.trainingSamples || [],
             modelParams: data.instance.modelParams || {
               temperature: 0.7,
               topP: 0.9,
@@ -179,6 +182,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
         setInstance(data.instance);
         setIsEditing(false);
         setActiveTab('preview');
+        universeToast.success('保存成功');
       } else {
         const data = await res.json();
         universeToast.error(data.message || '保存失败');
@@ -188,6 +192,34 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddSample = () => {
+    if (!currentSample.input.trim() || !currentSample.response.trim()) {
+      universeToast.warning('请输入完整的训练样本');
+      return;
+    }
+    setEditForm({
+      ...editForm,
+      trainingSamples: [...editForm.trainingSamples, currentSample]
+    });
+    setCurrentSample({ input: '', response: '' });
+  };
+
+  const handleDeleteSample = (index: number) => {
+    setEditForm({
+      ...editForm,
+      trainingSamples: editForm.trainingSamples.filter((_, i) => i !== index)
+    });
+  };
+
+  const handleUpdateSample = (index: number, updatedSample: TrainingSample) => {
+    const newSamples = [...editForm.trainingSamples];
+    newSamples[index] = updatedSample;
+    setEditForm({
+      ...editForm,
+      trainingSamples: newSamples
+    });
   };
 
   const handleDelete = async () => {
@@ -563,6 +595,92 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                 <label className="text-sm">允许其他用户查看训练集</label>
               </div>
             )}
+
+            <div className="pt-4 border-t">
+              <h3 className="text-lg font-semibold mb-4">训练集管理</h3>
+              <div className="space-y-4 mb-4">
+                <div className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">用户输入</label>
+                      <input
+                        type="text"
+                        value={currentSample.input}
+                        onChange={(e) => setCurrentSample({ ...currentSample, input: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg ${inputClass}`}
+                        placeholder="输入用户的问题或对话"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">AI回复</label>
+                      <textarea
+                        value={currentSample.response}
+                        onChange={(e) => setCurrentSample({ ...currentSample, response: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg ${inputClass}`}
+                        rows={3}
+                        placeholder="输入AI的回复"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">场景（可选）</label>
+                      <input
+                        type="text"
+                        value={currentSample.scenario || ''}
+                        onChange={(e) => setCurrentSample({ ...currentSample, scenario: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg ${inputClass}`}
+                        placeholder="例如: 工作场景、生活场景等"
+                      />
+                    </div>
+                    <button
+                      onClick={handleAddSample}
+                      className={`w-full px-4 py-2 rounded-lg text-white transition ${accentBtn}`}
+                    >
+                      + 添加训练样本
+                    </button>
+                  </div>
+                </div>
+
+                {editForm.trainingSamples.length > 0 && (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    <div className="text-sm font-medium mb-2">
+                      当前训练样本 ({editForm.trainingSamples.length} 条)
+                    </div>
+                    {editForm.trainingSamples.map((sample, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}
+                      >
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div>
+                              <span className="text-xs opacity-70">输入:</span>
+                              <div className="text-sm mt-1">{sample.input}</div>
+                            </div>
+                            <div>
+                              <span className="text-xs opacity-70">回复:</span>
+                              <div className="text-sm mt-1">{sample.response}</div>
+                            </div>
+                            {sample.scenario && (
+                              <div className={`text-xs px-2 py-1 rounded inline-block mt-1 ${
+                                mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                              }`}>
+                                📍 {sample.scenario}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSample(index)}
+                            className={`px-3 py-1 rounded text-sm ${mode === 'waibi' ? 'text-red-400 hover:bg-red-500/20' : 'text-red-600 hover:bg-red-50'}`}
+                          >
+                            删除
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="pt-4 border-t">
               <h3 className="text-lg font-semibold mb-4">模型参数</h3>

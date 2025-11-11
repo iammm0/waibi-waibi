@@ -54,7 +54,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 # 拷贝 prompts 目录（人格提示词文件）
 COPY --from=builder /app/prompts ./prompts
-# 注意：环境变量文件不需要复制，应通过 docker-compose 的 environment 或运行时环境变量传递
+# 拷贝环境变量文件（需要确保 .env.local 不在 .dockerignore 中）
+COPY --from=builder /app/.env.local ./.env.local
 
 # 暴露端口 & 启动命令
 EXPOSE 3000

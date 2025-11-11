@@ -105,6 +105,7 @@ export default function MePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [trainingSamples, setTrainingSamples] = useState<TrainingSample[]>([]);
   const [selectedPersonaFilter, setSelectedPersonaFilter] = useState<string>('all'); // 人格筛选：'all' 或具体人格代码
+  const [selectedInstanceFilter, setSelectedInstanceFilter] = useState<string>('all'); // 模型实例筛选：'all' 或 'used'（已发布模型使用的）
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
   const [personaInstances, setPersonaInstances] = useState<any[]>([]);
@@ -206,6 +207,7 @@ export default function MePage() {
       console.error('获取训练样本失败:', err);
     }
   };
+
 
   const fetchSubscription = async () => {
     setLoadingSubscription(true);
@@ -397,12 +399,14 @@ export default function MePage() {
         body: JSON.stringify({ id }),
       });
       if (res.ok) {
-        setTrainingSamples(trainingSamples.filter(s => s._id !== id));
+        await fetchTrainingSamples(); // 重新获取训练样本列表
         universeToast.success('删除成功');
       } else {
-        universeToast.error('删除失败，请重试');
+        const errorData = await res.json().catch(() => ({ message: '删除失败' }));
+        universeToast.error(errorData.message || '删除失败，请重试');
       }
     } catch (err) {
+      console.error('删除训练样本失败:', err);
       universeToast.error('删除失败，请重试');
     }
   };
@@ -1428,7 +1432,19 @@ export default function MePage() {
       <div className={`rounded-xl shadow-md p-4 sm:p-6 mt-6 ${panelClass}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-semibold">训练集管理</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* 模型实例筛选 */}
+            <select
+              value={selectedInstanceFilter}
+              onChange={(e) => setSelectedInstanceFilter(e.target.value)}
+              className={`px-3 py-1.5 rounded-lg text-sm ${inputClass} focus:outline-none focus:ring-2 ${
+                mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'
+              }`}
+            >
+              <option value="all">全部样本</option>
+              <option value="used">已发布模型使用的</option>
+              <option value="unused">未使用的</option>
+            </select>
             {/* 人格筛选 */}
             <select
               value={selectedPersonaFilter}
@@ -1445,51 +1461,138 @@ export default function MePage() {
               ))}
             </select>
             <span className="text-sm opacity-70">
-              共 {trainingSamples.filter(s => selectedPersonaFilter === 'all' || s.personaCode === selectedPersonaFilter).length} 条样本
+              共 {(() => {
+                let filtered = trainingSamples.filter(s => 
+                  selectedPersonaFilter === 'all' || s.personaCode === selectedPersonaFilter
+                );
+                if (selectedInstanceFilter === 'used') {
+                  // 筛选出已发布模型实例使用的训练集
+                  const usedSampleIds = new Set<string>();
+                  personaInstances
+                    .filter(inst => inst.isPublic && inst.trainingSamples && Array.isArray(inst.trainingSamples))
+                    .forEach(inst => {
+                      inst.trainingSamples.forEach((sample: any) => {
+                        // 通过内容匹配来判断是否被使用
+                        const sampleKey = `${sample.input}|${sample.response}`;
+                        usedSampleIds.add(sampleKey);
+                      });
+                    });
+                  filtered = filtered.filter(s => {
+                    const sampleKey = `${s.input}|${s.response}`;
+                    return usedSampleIds.has(sampleKey);
+                  });
+                } else if (selectedInstanceFilter === 'unused') {
+                  // 筛选出未使用的训练集
+                  const usedSampleIds = new Set<string>();
+                  personaInstances
+                    .filter(inst => inst.isPublic && inst.trainingSamples && Array.isArray(inst.trainingSamples))
+                    .forEach(inst => {
+                      inst.trainingSamples.forEach((sample: any) => {
+                        const sampleKey = `${sample.input}|${sample.response}`;
+                        usedSampleIds.add(sampleKey);
+                      });
+                    });
+                  filtered = filtered.filter(s => {
+                    const sampleKey = `${s.input}|${s.response}`;
+                    return !usedSampleIds.has(sampleKey);
+                  });
+                }
+                return filtered.length;
+              })()} 条样本
             </span>
           </div>
         </div>
         {(() => {
-          const filteredSamples = trainingSamples.filter(s => 
+          let filteredSamples = trainingSamples.filter(s => 
             selectedPersonaFilter === 'all' || s.personaCode === selectedPersonaFilter
           );
+          
+          // 根据模型实例筛选
+          if (selectedInstanceFilter === 'used') {
+            const usedSampleIds = new Set<string>();
+            personaInstances
+              .filter(inst => inst.isPublic && inst.trainingSamples && Array.isArray(inst.trainingSamples))
+              .forEach(inst => {
+                inst.trainingSamples.forEach((sample: any) => {
+                  const sampleKey = `${sample.input}|${sample.response}`;
+                  usedSampleIds.add(sampleKey);
+                });
+              });
+            filteredSamples = filteredSamples.filter(s => {
+              const sampleKey = `${s.input}|${s.response}`;
+              return usedSampleIds.has(sampleKey);
+            });
+          } else if (selectedInstanceFilter === 'unused') {
+            const usedSampleIds = new Set<string>();
+            personaInstances
+              .filter(inst => inst.isPublic && inst.trainingSamples && Array.isArray(inst.trainingSamples))
+              .forEach(inst => {
+                inst.trainingSamples.forEach((sample: any) => {
+                  const sampleKey = `${sample.input}|${sample.response}`;
+                  usedSampleIds.add(sampleKey);
+                });
+              });
+            filteredSamples = filteredSamples.filter(s => {
+              const sampleKey = `${s.input}|${s.response}`;
+              return !usedSampleIds.has(sampleKey);
+            });
+          }
+
           return filteredSamples.length === 0 ? (
             <div className={`text-center py-8 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
-              {selectedPersonaFilter === 'all' ? '暂无训练样本' : `暂无 ${MBTI_TYPES.find(p => p.name.toLowerCase() === selectedPersonaFilter)?.name || selectedPersonaFilter.toUpperCase()} 的训练样本`}
+              {selectedPersonaFilter === 'all' && selectedInstanceFilter === 'all' 
+                ? '暂无训练样本' 
+                : `暂无符合条件的训练样本`}
             </div>
           ) : (
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
-              {filteredSamples.map((sample) => (
-              <div key={sample._id} className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'}`}>
-                        {sample.personaCode.toUpperCase()}
-                      </span>
-                      {sample.scenario && (
-                        <span className="text-xs opacity-70">{sample.scenario}</span>
-                      )}
-                    </div>
-                    <div className="text-sm mb-1">
-                      <span className="opacity-70">输入:</span> {sample.input}
-                    </div>
-                    <div className="text-sm">
-                      <span className="opacity-70">回复:</span> {sample.response}
-                    </div>
-                    <div className="text-xs opacity-60 mt-2">
-                      {new Date(sample.createdAt).toLocaleString('zh-CN')}
+              {filteredSamples.map((sample) => {
+                // 检查是否被已发布模型使用
+                const isUsed = personaInstances.some(inst => 
+                  inst.isPublic && 
+                  inst.trainingSamples && 
+                  Array.isArray(inst.trainingSamples) &&
+                  inst.trainingSamples.some((s: any) => s.input === sample.input && s.response === sample.response)
+                );
+                return (
+                  <div key={sample._id} className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'}`}>
+                            {sample.personaCode.toUpperCase()}
+                          </span>
+                          {isUsed && (
+                            <span className={`px-2 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-700'}`}>
+                              已使用
+                            </span>
+                          )}
+                          {sample.scenario && (
+                            <span className="text-xs opacity-70">{sample.scenario}</span>
+                          )}
+                        </div>
+                        <div className="text-sm mb-1">
+                          <span className="opacity-70">输入:</span> {sample.input}
+                        </div>
+                        <div className="text-sm">
+                          <span className="opacity-70">回复:</span> {sample.response}
+                        </div>
+                        <div className="text-xs opacity-60 mt-2">
+                          {new Date(sample.createdAt).toLocaleString('zh-CN')}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleDeleteTrainingSample(sample._id)}
+                          className={`px-3 py-1 rounded text-sm transition ${mode === 'waibi' ? 'text-red-400 hover:bg-red-500/20' : 'text-red-600 hover:bg-red-50'}`}
+                        >
+                          删除
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteTrainingSample(sample._id)}
-                    className={`px-3 py-1 rounded text-sm ${mode === 'waibi' ? 'text-red-400 hover:bg-red-500/20' : 'text-red-600 hover:bg-red-50'}`}
-                  >
-                    删除
-                  </button>
-                </div>
-              </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}

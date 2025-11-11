@@ -59,7 +59,9 @@ export default function GuestbookPage() {
 
   const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
   const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
+  const accentBtn = mode === 'waibi' 
+    ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-200' 
+    : 'bg-gradient-to-r from-[var(--accent-cyan)] to-cyan-500 hover:brightness-110 text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-200';
   const cardClass = mode === 'waibi' ? 'bg-black/50 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
   const replyCardClass = mode === 'waibi' ? 'bg-gray-900/50 border border-green-500/20 text-white' : 'bg-gray-50 border border-gray-200 text-gray-900';
 
