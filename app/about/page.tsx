@@ -158,6 +158,17 @@ export default function AboutPage() {
               <div className="font-semibold mb-1">🎯 训练人格</div>
               <div className="text-sm opacity-80">定制你理想的人格对话风格</div>
             </Link>
+            <Link 
+              href="/support"
+              className={`block p-4 rounded-lg transition hover:scale-[1.02] ${
+                mode === 'waibi' 
+                  ? 'bg-green-500/20 border border-green-500/50 hover:bg-green-500/30' 
+                  : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/50 hover:bg-[var(--accent-cyan)]/20'
+              }`}
+            >
+              <div className="font-semibold mb-1">☕ 支持开发者</div>
+              <div className="text-sm opacity-80">请开发者喝杯咖啡，支持网站运营</div>
+            </Link>
           </div>
         </section>
 
@@ -175,6 +186,18 @@ export default function AboutPage() {
               如果你有任何建议或想法，欢迎在留言板中分享。
               每一个声音都很重要，每一个想法都值得被倾听。
             </p>
+            <div className={`mt-4 p-4 rounded-lg ${
+              mode === 'waibi' 
+                ? 'bg-green-500/10 border border-green-500/30' 
+                : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/30'
+            }`}>
+              <p className="mb-2">
+                <strong className={accentClass}>💚 支持我们：</strong>
+                运行 waibi 宇宙需要消耗大量的 AI Tokens 和算力资源。
+                如果您愿意支持我们，可以访问 <Link href="/support" className={`underline ${accentClass}`}>支持页面</Link> 请开发者喝杯咖啡。
+                您的每一份支持都将直接用于购买 Tokens 和算力，确保网站稳定运行。
+              </p>
+            </div>
           </div>
         </section>
       </div>
