@@ -4,20 +4,20 @@ import { useVibe } from '@/app/providers';
 import SectionHeader from '@/components/section-header';
 import { MBTI_TYPES } from '@/lib/mbti';
 import Link from 'next/link';
+import { getPersonaCardClasses } from '@/lib/persona-colors';
 
 export default function AboutPage() {
   const { mode } = useVibe();
   const panelClass = mode === 'waibi' 
-    ? 'bg-black/90 border border-green-500/30 text-white' 
+    ? 'bg-black/90 border border-gray-700 text-white' 
     : 'bg-white border border-gray-200 text-gray-900';
   const accentClass = mode === 'waibi' 
-    ? 'text-green-400' 
-    : 'text-[var(--accent-cyan)]';
+    ? 'text-gray-200' 
+    : 'text-gray-800';
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <SectionHeader 
-        icon="ℹ️"
         title="关于 waibi 宇宙" 
         subtitle="探索16种人格的无限可能" 
       />
@@ -31,8 +31,7 @@ export default function AboutPage() {
           <div className="space-y-4 text-base leading-relaxed opacity-90">
             <p>
               waibi 宇宙是一个基于 MBTI（迈尔斯-布里格斯类型指标）的交互式平台。
-              在这里，你可以探索 16 种不同的人格类型，与它们对话，训练它们，
-              并在留言板中分享你的想法。
+              在这里，你可以探索 16 种不同的人格类型，与它们对话，训练它们。
             </p>
             <p>
               我们相信每个人格类型都有其独特的价值。无论是理性分析的 INTJ，
@@ -60,15 +59,9 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="p-4 rounded-lg bg-current/5 border border-current/10">
-              <h3 className="font-semibold mb-2">📝 留言板</h3>
-              <p className="text-sm opacity-80">
-                以你的人格视角，在留言板中分享你的想法和感悟。
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-current/5 border border-current/10">
               <h3 className="font-semibold mb-2">🎨 个性化</h3>
               <p className="text-sm opacity-80">
-                支持匿名或实名留言，保护你的隐私，或展示真实的自己。
+                创建属于你自己的人格模型实例，展示独特的个性。
               </p>
             </div>
           </div>
@@ -80,22 +73,21 @@ export default function AboutPage() {
             16 种人格类型
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-3">
-            {MBTI_TYPES.map((persona) => (
-              <Link
-                key={persona.id}
-                href={`/mbti/${persona.id}`}
-                className={`p-3 rounded-lg text-center transition hover:scale-105 ${
-                  mode === 'waibi' 
-                    ? 'bg-gray-900/50 border border-green-500/30 hover:border-green-500/60' 
-                    : 'bg-gray-50 border border-gray-200 hover:border-[var(--accent-cyan)]'
-                }`}
-              >
-                <div className="text-lg font-bold mb-1">{persona.name}</div>
-                <div className="text-xs opacity-70 line-clamp-2">
-                  {persona.description.length > 50 ? persona.description.slice(0, 50) + '...' : persona.description}
-                </div>
-              </Link>
-            ))}
+            {MBTI_TYPES.map((persona) => {
+              const cardClass = getPersonaCardClasses(persona.name, mode);
+              return (
+                <Link
+                  key={persona.id}
+                  href={`/mbti/${persona.id}`}
+                  className={`p-3 rounded-lg text-center transition hover:scale-105 ${cardClass}`}
+                >
+                  <div className="text-lg font-bold mb-1">{persona.name}</div>
+                  <div className="text-xs opacity-70 line-clamp-2">
+                    {persona.description.length > 50 ? persona.description.slice(0, 50) + '...' : persona.description}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
@@ -126,33 +118,22 @@ export default function AboutPage() {
           </h2>
           <div className="space-y-3">
             <Link 
-              href="/guestbook"
-              className={`block p-4 rounded-lg transition hover:scale-[1.02] ${
-                mode === 'waibi' 
-                  ? 'bg-green-500/20 border border-green-500/50 hover:bg-green-500/30' 
-                  : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/50 hover:bg-[var(--accent-cyan)]/20'
-              }`}
-            >
-              <div className="font-semibold mb-1">📝 查看留言板</div>
-              <div className="text-sm opacity-80">看看其他用户的留言和想法</div>
-            </Link>
-            <Link 
               href="/chat"
               className={`block p-4 rounded-lg transition hover:scale-[1.02] ${
                 mode === 'waibi' 
-                  ? 'bg-green-500/20 border border-green-500/50 hover:bg-green-500/30' 
-                  : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/50 hover:bg-[var(--accent-cyan)]/20'
+                  ? 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800' 
+                  : 'bg-gray-50 border border-gray-300 hover:bg-gray-100'
               }`}
             >
               <div className="font-semibold mb-1">💬 开始对话</div>
               <div className="text-sm opacity-80">与不同人格类型的AI进行对话</div>
             </Link>
             <Link 
-              href="/mbti"
+              href="/"
               className={`block p-4 rounded-lg transition hover:scale-[1.02] ${
                 mode === 'waibi' 
-                  ? 'bg-green-500/20 border border-green-500/50 hover:bg-green-500/30' 
-                  : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/50 hover:bg-[var(--accent-cyan)]/20'
+                  ? 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800' 
+                  : 'bg-gray-50 border border-gray-300 hover:bg-gray-100'
               }`}
             >
               <div className="font-semibold mb-1">🎯 训练人格</div>
@@ -162,8 +143,8 @@ export default function AboutPage() {
               href="/support"
               className={`block p-4 rounded-lg transition hover:scale-[1.02] ${
                 mode === 'waibi' 
-                  ? 'bg-green-500/20 border border-green-500/50 hover:bg-green-500/30' 
-                  : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/50 hover:bg-[var(--accent-cyan)]/20'
+                  ? 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800' 
+                  : 'bg-gray-50 border border-gray-300 hover:bg-gray-100'
               }`}
             >
               <div className="font-semibold mb-1">☕ 支持开发者</div>
@@ -183,13 +164,13 @@ export default function AboutPage() {
               他希望这个平台能够成为大家交流、探索和成长的桥梁。
             </p>
             <p>
-              如果你有任何建议或想法，欢迎在留言板中分享。
+              如果你有任何建议或想法，欢迎通过其他方式与我们联系。
               每一个声音都很重要，每一个想法都值得被倾听。
             </p>
             <div className={`mt-4 p-4 rounded-lg ${
               mode === 'waibi' 
-                ? 'bg-green-500/10 border border-green-500/30' 
-                : 'bg-[var(--accent-cyan)]/10 border border-[var(--accent-cyan)]/30'
+                ? 'bg-gray-800/50 border border-gray-700' 
+                : 'bg-gray-50 border border-gray-300'
             }`}>
               <p className="mb-2">
                 <strong className={accentClass}>💚 支持我们：</strong>

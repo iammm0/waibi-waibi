@@ -9,6 +9,7 @@ import { MBTI_TYPES } from '@/lib/mbti';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import AvatarEditor from '@/components/avatar-editor';
 import { universeToast } from '@/components/universe-toast';
+import { getPersonaColors, getPersonaButtonClasses } from '@/lib/persona-colors';
 
 export interface ModelParams {
   temperature: number;
@@ -56,10 +57,31 @@ export default function PersonaInstanceCreatePage() {
   const [saving, setSaving] = useState(false);
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  // 获取选中人格的颜色
+  const selectedPersonaColors = selectedPersona ? getPersonaColors(selectedPersona.toUpperCase(), mode) : null;
+  const defaultPanelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const defaultInputClass = mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
+  const defaultAccentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
+  const defaultSecondaryBtn = mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  
+  const panelClass = selectedPersonaColors 
+    ? (mode === 'waibi' ? `bg-black/90 ${selectedPersonaColors.border} text-white` : `bg-white ${selectedPersonaColors.border} text-gray-900`)
+    : defaultPanelClass;
+  const inputClass = selectedPersonaColors
+    ? (mode === 'waibi' ? `${selectedPersonaColors.border} bg-gray-900/50 text-white` : `${selectedPersonaColors.border} bg-white text-gray-900`)
+    : defaultInputClass;
+  const accentBtn = selectedPersonaColors 
+    ? getPersonaButtonClasses(selectedPersona.toUpperCase(), mode)
+    : defaultAccentBtn;
+  const secondaryBtn = selectedPersonaColors
+    ? (mode === 'waibi' ? `${selectedPersonaColors.border} bg-gray-800/50 hover:bg-gray-800` : `${selectedPersonaColors.border} bg-gray-50 hover:bg-gray-100`)
+    : defaultSecondaryBtn;
+  const stepIndicatorColor = selectedPersonaColors
+    ? (mode === 'waibi' ? selectedPersonaColors.bg : selectedPersonaColors.bg)
+    : (mode === 'waibi' ? 'bg-gray-600' : 'bg-gray-500');
+  const stepIndicatorText = selectedPersonaColors
+    ? (mode === 'waibi' ? selectedPersonaColors.text : 'text-white')
+    : 'text-white';
 
   // 检查URL参数，如果有template参数，加载模板
   useEffect(() => {
@@ -245,7 +267,6 @@ export default function PersonaInstanceCreatePage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader
-        icon="✨"
         title="创建人格模型实例"
         subtitle="创建一个全新的人格模型实例，可以是空白模板或基于预制人格"
       />
@@ -266,7 +287,7 @@ export default function PersonaInstanceCreatePage() {
             <div key={s} className="flex items-center flex-1">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
                 step >= s 
-                  ? mode === 'waibi' ? 'bg-green-500 text-white' : 'bg-[var(--accent-cyan)] text-white'
+                  ? `${stepIndicatorColor} ${stepIndicatorText}`
                   : mode === 'waibi' ? 'bg-gray-800 text-gray-400' : 'bg-gray-200 text-gray-500'
               }`}>
                 {s}
@@ -274,7 +295,7 @@ export default function PersonaInstanceCreatePage() {
               {s < 5 && (
                 <div className={`flex-1 h-1 mx-2 ${
                   step > s 
-                    ? mode === 'waibi' ? 'bg-green-500' : 'bg-[var(--accent-cyan)]'
+                    ? stepIndicatorColor
                     : mode === 'waibi' ? 'bg-gray-800' : 'bg-gray-200'
                 }`} />
               )}
@@ -304,11 +325,10 @@ export default function PersonaInstanceCreatePage() {
                 }}
                 className={`p-6 rounded-lg border-2 transition ${
                   instanceType === 'blank'
-                    ? mode === 'waibi' ? 'border-green-500 bg-green-500/20' : 'border-[var(--accent-cyan)] bg-blue-50'
-                    : mode === 'waibi' ? 'border-gray-700 hover:border-green-500/50' : 'border-gray-200 hover:border-gray-300'
+                    ? mode === 'waibi' ? 'border-gray-600 bg-gray-600/20' : 'border-gray-500 bg-gray-50'
+                    : mode === 'waibi' ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="text-4xl mb-3">📝</div>
                 <div className="text-lg font-semibold mb-2">空白模板</div>
                 <div className="text-sm opacity-80">从零开始，完全自定义你的人格模型</div>
               </button>
@@ -319,11 +339,12 @@ export default function PersonaInstanceCreatePage() {
                 }}
                 className={`p-6 rounded-lg border-2 transition ${
                   instanceType === 'persona'
-                    ? mode === 'waibi' ? 'border-green-500 bg-green-500/20' : 'border-[var(--accent-cyan)] bg-blue-50'
-                    : mode === 'waibi' ? 'border-gray-700 hover:border-green-500/50' : 'border-gray-200 hover:border-gray-300'
+                    ? selectedPersonaColors
+                      ? (mode === 'waibi' ? `${selectedPersonaColors.border} ${selectedPersonaColors.bg}/20` : `${selectedPersonaColors.border} ${selectedPersonaColors.bg}/10`)
+                      : (mode === 'waibi' ? 'border-gray-600 bg-gray-600/20' : 'border-gray-500 bg-gray-50')
+                    : mode === 'waibi' ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="text-4xl mb-3">🎭</div>
                 <div className="text-lg font-semibold mb-2">基于预制人格</div>
                 <div className="text-sm opacity-80">基于MBTI人格类型，使用预设提示词</div>
               </button>
@@ -331,11 +352,10 @@ export default function PersonaInstanceCreatePage() {
                 onClick={() => setInstanceType('template')}
                 className={`p-6 rounded-lg border-2 transition ${
                   instanceType === 'template'
-                    ? mode === 'waibi' ? 'border-green-500 bg-green-500/20' : 'border-[var(--accent-cyan)] bg-blue-50'
-                    : mode === 'waibi' ? 'border-gray-700 hover:border-green-500/50' : 'border-gray-200 hover:border-gray-300'
+                    ? mode === 'waibi' ? 'border-gray-600 bg-gray-600/20' : 'border-gray-500 bg-gray-50'
+                    : mode === 'waibi' ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="text-4xl mb-3">🔧</div>
                 <div className="text-lg font-semibold mb-2">基于收藏模型</div>
                 <div className="text-sm opacity-80">基于你收藏的模型进行二次创作</div>
               </button>
@@ -503,7 +523,9 @@ export default function PersonaInstanceCreatePage() {
                   <span
                     key={tag}
                     className={`px-3 py-1 rounded-full text-sm ${
-                      mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                      selectedPersonaColors
+                        ? (mode === 'waibi' ? `${selectedPersonaColors.bg}/20 ${selectedPersonaColors.text}` : `${selectedPersonaColors.bg}/10 ${selectedPersonaColors.text}`)
+                        : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                     }`}
                   >
                     {tag}
@@ -644,7 +666,9 @@ export default function PersonaInstanceCreatePage() {
                     <div
                       key={index}
                       className={`p-4 rounded-lg border ${
-                        mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'
+                        selectedPersonaColors
+                          ? (mode === 'waibi' ? `bg-gray-900/50 ${selectedPersonaColors.border}` : `bg-gray-50 ${selectedPersonaColors.border}`)
+                          : (mode === 'waibi' ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200')
                       }`}
                     >
                       <div className="flex justify-between items-start">
@@ -653,7 +677,9 @@ export default function PersonaInstanceCreatePage() {
                           <div className="mb-1">AI：{sample.response}</div>
                           {sample.scenario && (
                             <div className={`text-xs px-2 py-1 rounded inline-block mt-1 ${
-                              mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                              selectedPersonaColors
+                                ? (mode === 'waibi' ? `${selectedPersonaColors.bg}/20 ${selectedPersonaColors.text}` : `${selectedPersonaColors.bg}/10 ${selectedPersonaColors.text}`)
+                                : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                             }`}>
                               {sample.scenario}
                             </div>
@@ -698,7 +724,11 @@ export default function PersonaInstanceCreatePage() {
               <h3 className="text-xl font-semibold">模型参数</h3>
               <button
                 onClick={() => setIsAdvancedMode(!isAdvancedMode)}
-                className={`text-sm ${mode === 'waibi' ? 'text-green-400' : 'text-[var(--accent-cyan)]'}`}
+                className={`text-sm ${
+                  selectedPersonaColors
+                    ? selectedPersonaColors.accent
+                    : (mode === 'waibi' ? 'text-gray-300' : 'text-gray-700')
+                }`}
               >
                 {isAdvancedMode ? '简化视图' : '高级模式'}
               </button>

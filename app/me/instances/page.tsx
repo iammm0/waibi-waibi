@@ -11,9 +11,9 @@ import { universeConfirm } from '@/components/universe-confirm';
 export default function InstancesPage() {
   const { mode } = useVibe();
   const router = useRouter();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const accentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
+  const secondaryBtn = mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
 
   const [personaInstances, setPersonaInstances] = useState<any[]>([]);
   const [loadingInstances, setLoadingInstances] = useState(false);
@@ -42,7 +42,6 @@ export default function InstancesPage() {
       <SectionHeader 
         title="模型实例管理" 
         subtitle="管理你创建的所有模型实例"
-        icon="🤖"
         actions={
           <button
             onClick={() => router.push('/persona-instance/create')}
@@ -73,7 +72,7 @@ export default function InstancesPage() {
             <div
               key={instance._id}
               className={`p-4 rounded-lg border ${
-                mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'
+                mode === 'waibi' ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200'
               }`}
             >
               <div className="flex items-start justify-between mb-2">
@@ -96,7 +95,7 @@ export default function InstancesPage() {
               <div className="flex flex-wrap gap-2 mb-3">
                 {instance.personaCode && (
                   <span className={`px-2 py-1 rounded text-xs ${
-                    mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                    mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700'
                   }`}>
                     {instance.personaCode.toUpperCase()}
                   </span>

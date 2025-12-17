@@ -19,10 +19,10 @@ interface Subscription {
 export default function SubscriptionPage() {
   const { mode } = useVibe();
   const router = useRouter();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const accentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
+  const secondaryBtn = mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  const inputClass = mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -168,19 +168,18 @@ export default function SubscriptionPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-2 max-w-4xl">
-        <SectionHeader icon="💎" title="订阅计划" subtitle="加载中..." />
+        <SectionHeader title="订阅计划" subtitle="加载中..." />
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
-      <SectionHeader icon="💎" title="订阅计划" subtitle="选择合适的订阅计划，解锁更多功能" />
+      <SectionHeader title="订阅计划" subtitle="选择合适的订阅计划，解锁更多功能" />
 
       {/* 测试中提示 */}
       <div className={`rounded-xl p-4 mb-6 ${mode === 'waibi' ? 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-200' : 'bg-yellow-50 border border-yellow-200 text-yellow-800'}`}>
         <div className="flex items-start gap-3">
-          <span className="text-xl">⚠️</span>
           <div className="flex-1">
             <div className="font-semibold mb-1">订阅功能正在测试中</div>
             <div className="text-sm opacity-90">
@@ -198,7 +197,7 @@ export default function SubscriptionPage() {
             <h2 className="text-xl font-semibold">当前订阅状态</h2>
             <span className={`px-3 py-1 rounded-full text-xs ${
               subscription.active 
-                ? mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                ? mode === 'waibi' ? 'bg-emerald-400/20 text-emerald-300' : 'bg-green-100 text-green-700'
                 : mode === 'waibi' ? 'bg-gray-800 text-gray-400' : 'bg-gray-200 text-gray-600'
             }`}>
               {subscription.active ? '已激活' : '未激活'}
@@ -229,7 +228,7 @@ export default function SubscriptionPage() {
       <div className={`rounded-xl shadow-md p-6 ${panelClass}`}>
         <h2 className="text-xl font-semibold mb-4">选择订阅计划</h2>
         
-        <div className={`p-6 rounded-lg mb-6 ${mode === 'waibi' ? 'bg-gray-900/50 border border-green-500/30' : 'bg-gray-50 border border-gray-200'}`}>
+        <div className={`p-6 rounded-lg mb-6 ${mode === 'waibi' ? 'bg-gray-900/50 border border-emerald-400/30' : 'bg-gray-50 border border-gray-200'}`}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="text-lg font-semibold mb-1">月付计划</div>

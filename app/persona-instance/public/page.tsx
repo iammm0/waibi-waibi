@@ -7,6 +7,7 @@ import { useVibe } from '@/app/providers';
 import PersonaChat from '@/components/persona-chat';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import UniverseStatus from '@/components/universe-status';
+import { getPersonaCardClasses } from '@/lib/persona-colors';
 
 interface PersonaInstance {
   _id: string;
@@ -36,10 +37,8 @@ export default function PublicPersonaInstancePage() {
   const [model, setModel] = useState<string>('gpt-4o-mini');
   const [search, setSearch] = useState('');
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const cardClass = mode === 'waibi' ? 'bg-gray-900/50 border border-green-500/30 hover:border-green-500/50' : 'bg-gray-50 border border-gray-200 hover:border-gray-300';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const inputClass = mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
 
   useEffect(() => {
     fetchInstances();
@@ -73,8 +72,7 @@ export default function PublicPersonaInstancePage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
-        icon="🌌"
-        title="公开人格模型实例"
+        title="开放实例"
         subtitle="探索其他用户创建的公开模型实例" 
       />
 
@@ -115,16 +113,20 @@ export default function PublicPersonaInstancePage() {
               </div>
             ) : (
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {instances.map((instance) => (
-                  <div
-                    key={instance._id}
-                    onClick={() => setSelectedInstanceId(instance._id)}
-                    className={`rounded-lg p-3 cursor-pointer transition ${
-                      selectedInstanceId === instance._id
-                        ? cardClass + ' ring-2 ring-green-500/50'
-                        : cardClass
-                    }`}
-                  >
+                {instances.map((instance) => {
+                  const cardClass = instance.personaCode ? getPersonaCardClasses(instance.personaCode.toUpperCase(), mode) : (mode === 'waibi' ? 'bg-gray-900/50 border border-gray-700 hover:border-gray-600' : 'bg-gray-50 border border-gray-200 hover:border-gray-300');
+                  const personaColors = instance.personaCode ? require('@/lib/persona-colors').getPersonaColors(instance.personaCode.toUpperCase(), mode) : null;
+                  
+                  return (
+                    <div
+                      key={instance._id}
+                      onClick={() => setSelectedInstanceId(instance._id)}
+                      className={`rounded-lg p-3 cursor-pointer transition ${
+                        selectedInstanceId === instance._id
+                          ? cardClass + (personaColors ? ` ring-2 ${personaColors.border.replace('border-', 'ring-')}/50` : ' ring-2 ring-gray-500/50')
+                          : cardClass
+                      }`}
+                    >
                     <div className="flex items-start gap-3">
                       {instance.avatarUrl && (
                         <img
@@ -142,7 +144,7 @@ export default function PublicPersonaInstancePage() {
                         )}
                         {instance.isForked && instance.originalUserName && (
                           <div className={`text-xs mt-1 ${mode === 'waibi' ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                            ✨ 原创作者: {instance.originalUserName}
+                            原创作者: {instance.originalUserName}
                           </div>
                         )}
                         {instance.isForked && instance.developerUserName && (
@@ -162,7 +164,9 @@ export default function PublicPersonaInstancePage() {
                               <span
                                 key={index}
                                 className={`text-xs px-2 py-0.5 rounded ${
-                                  mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                                  personaColors
+                                    ? (mode === 'waibi' ? `${personaColors.bg}/20 ${personaColors.text}` : `${personaColors.bg}/10 ${personaColors.text}`)
+                                    : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                                 }`}
                               >
                                 {tag}
@@ -173,7 +177,8 @@ export default function PublicPersonaInstancePage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

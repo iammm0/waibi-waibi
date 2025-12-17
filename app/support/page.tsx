@@ -6,10 +6,10 @@ import SectionHeader from '@/components/section-header';
 
 export default function SupportPage() {
   const { mode } = useVibe();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const cardClass = mode === 'waibi' ? 'bg-gray-900/50 border border-green-500/30 hover:border-green-500/50' : 'bg-gray-50 border border-gray-200 hover:border-gray-300';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const accentClass = mode === 'waibi' ? 'text-green-400' : 'text-[var(--accent-cyan)]';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const cardClass = mode === 'waibi' ? 'bg-gray-900/50 border border-gray-700 hover:border-gray-600' : 'bg-gray-50 border border-gray-200 hover:border-gray-300';
+  const accentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
+  const accentClass = mode === 'waibi' ? 'text-gray-200' : 'text-gray-800';
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<'alipay' | 'wechat' | null>(null);
@@ -25,7 +25,6 @@ export default function SupportPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
       <SectionHeader 
-        icon="☕"
         title="请开发者喝杯咖啡" 
         subtitle="您的支持将帮助我们持续运营和改进歪比宇宙" 
       />
@@ -33,7 +32,6 @@ export default function SupportPage() {
       {/* 说明卡片 */}
       <div className={`rounded-xl shadow-md p-6 mb-6 ${panelClass}`}>
         <div className="flex items-start gap-4">
-          <div className="text-4xl">☕</div>
           <div className="flex-1">
             <h2 className="text-xl font-semibold mb-3">关于支持</h2>
             <div className="space-y-2 opacity-90 text-sm">
@@ -50,7 +48,7 @@ export default function SupportPage() {
                 <li>维护和更新服务器基础设施</li>
               </ul>
               <p className="mt-3 pt-3 border-t border-opacity-20">
-                <strong className={accentClass}>感谢您的支持！</strong> 每一份心意都是我们前进的动力。💚
+                <strong className={accentClass}>感谢您的支持！</strong> 每一份心意都是我们前进的动力。
               </p>
             </div>
           </div>
@@ -71,8 +69,8 @@ export default function SupportPage() {
               className={`p-4 rounded-lg border-2 transition-all ${
                 selectedAmount === amount
                   ? mode === 'waibi'
-                    ? 'border-green-500 bg-green-500/20 text-green-400'
-                    : 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]'
+                    ? 'border-gray-600 bg-gray-600/20 text-gray-200'
+                    : 'border-gray-500 bg-gray-500/10 text-gray-800'
                   : cardClass
               }`}
             >
@@ -93,13 +91,12 @@ export default function SupportPage() {
               className={`p-4 rounded-lg border-2 transition-all text-left ${
                 selectedPayment === 'alipay'
                   ? mode === 'waibi'
-                    ? 'border-green-500 bg-green-500/20'
-                    : 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10'
+                    ? 'border-gray-600 bg-gray-600/20'
+                    : 'border-gray-500 bg-gray-500/10'
                   : cardClass
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="text-3xl">💙</div>
                 <div>
                   <div className="font-semibold">支付宝</div>
                   <div className="text-xs opacity-70">使用支付宝扫码支付</div>
@@ -111,13 +108,12 @@ export default function SupportPage() {
               className={`p-4 rounded-lg border-2 transition-all text-left ${
                 selectedPayment === 'wechat'
                   ? mode === 'waibi'
-                    ? 'border-green-500 bg-green-500/20'
-                    : 'border-[var(--accent-cyan)] bg-[var(--accent-cyan)]/10'
+                    ? 'border-gray-600 bg-gray-600/20'
+                    : 'border-gray-500 bg-gray-500/10'
                   : cardClass
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="text-3xl">💚</div>
                 <div>
                   <div className="font-semibold">微信支付</div>
                   <div className="text-xs opacity-70">使用微信扫码支付</div>
@@ -187,7 +183,7 @@ export default function SupportPage() {
                 }}
                 className={`px-6 py-2 rounded-lg ${
                   mode === 'waibi' 
-                    ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' 
+                    ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' 
                     : 'border border-gray-300 bg-gray-50 hover:bg-gray-100'
                 }`}
               >

@@ -22,8 +22,8 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
   const { letterId } = use(params);
   const { mode } = useVibe();
   const router = useRouter();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const secondaryBtn = mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
 
   const [letter, setLetter] = useState<Letter | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,8 +85,8 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
           type="error"
           context="letter"
           message={error || '信件不存在'}
-          actionHref="/inbox"
-          actionLabel="返回收件箱"
+          actionHref="/"
+          actionLabel="返回首页"
         />
       </div>
     );
@@ -94,7 +94,7 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
-      <SectionHeader icon="✉️" title="歪比宇宙信件" subtitle={letter.title} />
+      <SectionHeader title="歪比宇宙信件" subtitle={letter.title} />
 
       <div className={`rounded-xl shadow-md p-6 sm:p-8 mt-6 ${panelClass}`}>
         <div className="mb-6">
@@ -119,7 +119,7 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
             </div>
             <div className="flex items-center gap-2">
               <span>•</span>
-              <span>👁 {letter.viewCount} 次查看</span>
+              <span>{letter.viewCount} 次查看</span>
             </div>
           </div>
 
@@ -130,8 +130,8 @@ export default function LetterDetailPage({ params }: { params: Promise<{ letterI
                   key={index}
                   className={`px-3 py-1 rounded-full text-xs ${
                     mode === 'waibi'
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-blue-100 text-blue-700 border border-blue-200'
+                      ? 'bg-gray-600/20 text-gray-300 border border-gray-700'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300'
                   }`}
                 >
                   {tag}

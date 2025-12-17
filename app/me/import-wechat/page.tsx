@@ -10,10 +10,10 @@ import { universeToast } from '@/components/universe-toast';
 export default function ImportWechatPage() {
   const { mode } = useVibe();
   const router = useRouter();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const inputClass = mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
+  const accentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
+  const secondaryBtn = mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
 
   const [file, setFile] = useState<File | null>(null);
   const [selectedPersona, setSelectedPersona] = useState<string>('intj');
@@ -104,7 +104,6 @@ export default function ImportWechatPage() {
   return (
     <div className="container mx-auto px-4 py-2 max-w-4xl">
       <SectionHeader 
-        icon="📥"
         title="导入微信聊天记录" 
         subtitle="将微信聊天记录转换为训练样本，用于训练人格模型"
       />
@@ -120,7 +119,7 @@ export default function ImportWechatPage() {
               onChange={handleFileChange}
               className={`w-full p-3 rounded-lg ${inputClass} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
                 mode === 'waibi' 
-                  ? 'file:bg-green-500 file:text-white file:hover:bg-green-600' 
+                  ? 'file:bg-emerald-400 file:text-white file:hover:bg-emerald-500' 
                   : 'file:bg-[var(--accent-cyan)] file:text-white file:hover:brightness-110'
               }`}
               disabled={processing}
@@ -160,14 +159,14 @@ export default function ImportWechatPage() {
             <div className={`p-4 rounded-lg ${mode === 'waibi' ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
               <div className="text-sm mb-2">{progress}</div>
               <div className="w-full bg-gray-700 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full animate-pulse" style={{ width: '50%' }}></div>
+                <div className="bg-emerald-400 h-2 rounded-full animate-pulse" style={{ width: '50%' }}></div>
               </div>
             </div>
           )}
 
           {/* 处理结果 */}
           {result && (
-            <div className={`p-4 rounded-lg ${mode === 'waibi' ? 'bg-green-500/20 border border-green-500/30' : 'bg-green-50 border border-green-200'}`}>
+            <div className={`p-4 rounded-lg ${mode === 'waibi' ? 'bg-emerald-400/20 border border-emerald-400/30' : 'bg-green-50 border border-green-200'}`}>
               <div className="text-sm font-medium mb-2">导入结果</div>
               <div className="text-sm">
                 <div>成功: {result.success} 条样本</div>

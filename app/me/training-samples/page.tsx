@@ -21,8 +21,8 @@ interface TrainingSample {
 export default function TrainingSamplesPage() {
   const { mode } = useVibe();
   const router = useRouter();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const inputClass = mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
 
   const [trainingSamples, setTrainingSamples] = useState<TrainingSample[]>([]);
   const [selectedPersonaFilter, setSelectedPersonaFilter] = useState<string>('all');
@@ -126,7 +126,6 @@ export default function TrainingSamplesPage() {
       <SectionHeader 
         title="训练集管理" 
         subtitle="管理你的所有训练样本"
-        icon="📚"
       />
 
       {/* 筛选器 */}
@@ -138,7 +137,7 @@ export default function TrainingSamplesPage() {
               value={selectedInstanceFilter}
               onChange={(e) => setSelectedInstanceFilter(e.target.value)}
               className={`px-3 py-1.5 rounded-lg text-sm ${inputClass} focus:outline-none focus:ring-2 ${
-                mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'
+                mode === 'waibi' ? 'focus:ring-gray-500/50' : 'focus:ring-gray-500'
               }`}
             >
               <option value="all">全部样本</option>
@@ -149,7 +148,7 @@ export default function TrainingSamplesPage() {
               value={selectedPersonaFilter}
               onChange={(e) => setSelectedPersonaFilter(e.target.value)}
               className={`px-3 py-1.5 rounded-lg text-sm ${inputClass} focus:outline-none focus:ring-2 ${
-                mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'
+                mode === 'waibi' ? 'focus:ring-gray-500/50' : 'focus:ring-gray-500'
               }`}
             >
               <option value="all">全部人格</option>
@@ -189,11 +188,11 @@ export default function TrainingSamplesPage() {
               inst.trainingSamples.some((s: any) => s.input === sample.input && s.response === sample.response)
             );
             return (
-              <div key={sample._id} className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}>
+              <div key={sample._id} className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-emerald-400/30' : 'bg-gray-50 border-gray-200'}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'}`}>
+                      <span className={`px-2 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-emerald-400/20 text-emerald-300' : 'bg-blue-100 text-blue-700'}`}>
                         {sample.personaCode.toUpperCase()}
                       </span>
                       {isUsed && (

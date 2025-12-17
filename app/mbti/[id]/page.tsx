@@ -10,6 +10,7 @@ import TrainingPreview from '@/components/training-preview';
 import { getPersonalityById } from '@/lib/mbti';
 import { fetchWithAuth } from '@/lib/auth-utils';
 import { universeToast } from '@/components/universe-toast';
+import { getPersonaColors, getPersonaButtonClasses } from '@/lib/persona-colors';
 
 export interface ModelParams {
   temperature: number;
@@ -228,15 +229,25 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
     }
   };
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  // 获取人格颜色
+  const personaColors = persona ? getPersonaColors(persona.name, mode) : null;
+  const accentBtnClasses = persona ? getPersonaButtonClasses(persona.name, mode) : (mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600');
+  
+  const panelClass = personaColors 
+    ? (mode === 'waibi' ? `bg-black/90 ${personaColors.border} text-white` : `bg-white ${personaColors.border} text-gray-900`)
+    : (mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900');
+  const inputClass = personaColors
+    ? (mode === 'waibi' ? `${personaColors.border} bg-gray-900/50 text-white` : `${personaColors.border} bg-white text-gray-900`)
+    : (mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900');
+  const accentBtn = personaColors ? accentBtnClasses : (mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600');
+  const secondaryBtn = personaColors
+    ? (mode === 'waibi' ? `${personaColors.border} bg-gray-800/50 hover:bg-gray-800` : `${personaColors.border} bg-gray-50 hover:bg-gray-100`)
+    : (mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100');
+  const focusRing = personaColors ? personaColors.focus : (mode === 'waibi' ? 'focus:ring-gray-500/50' : 'focus:ring-gray-500');
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
       <SectionHeader 
-        icon="🎯"
         title={`${persona?.name || '人格'} 训练中心`} 
         subtitle={persona?.description ? (persona.description.length > 50 ? persona.description.slice(0, 50) + '...' : persona.description) : ''} 
       />
@@ -244,7 +255,6 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
       {/* 操作提示 */}
       <div className={`rounded-xl shadow-md p-4 mt-6 mb-6 ${panelClass}`}>
         <div className="flex items-start gap-3">
-          <div className={`text-2xl ${mode === 'waibi' ? 'text-green-400' : 'text-[var(--accent-cyan)]'}`}>💡</div>
           <div className="flex-1">
             <div className="font-semibold mb-1">训练数据集说明</div>
             <div className={`text-sm ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -263,7 +273,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
               <div>
                 <label className="block text-sm font-medium mb-2">用户输入</label>
                 <textarea
-                  className={`w-full p-3 rounded-lg ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
+                  className={`w-full p-3 rounded-lg ${inputClass} focus:outline-none focus:ring-2 ${focusRing}`}
                   rows={3}
                   placeholder="输入用户可能会说的话..."
                   value={currentSample.input}
@@ -274,7 +284,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
               <div>
                 <label className="block text-sm font-medium mb-2">AI回应</label>
                 <textarea
-                  className={`w-full p-3 rounded-lg ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
+                  className={`w-full p-3 rounded-lg ${inputClass} focus:outline-none focus:ring-2 ${focusRing}`}
                   rows={3}
                   placeholder="输入AI应该回应的内容..."
                   value={currentSample.response}
@@ -286,7 +296,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
                 <label className="block text-sm font-medium mb-2">场景描述 (可选)</label>
                 <input
                   type="text"
-                  className={`w-full p-3 rounded-lg ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
+                  className={`w-full p-3 rounded-lg ${inputClass} focus:outline-none focus:ring-2 ${focusRing}`}
                   placeholder="描述这个对话发生的场景..."
                   value={currentSample.scenario || ''}
                   onChange={(e) => setCurrentSample({...currentSample, scenario: e.target.value})}
@@ -308,21 +318,24 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold">训练样本列表</h3>
               <span className={`text-sm px-3 py-1 rounded-full ${
-                mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                personaColors 
+                  ? (mode === 'waibi' ? `${personaColors.bg}/20 ${personaColors.text}` : `${personaColors.bg}/10 ${personaColors.text}`)
+                  : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
               }`}>
                 {trainingSamples.length} 条
               </span>
             </div>
             {trainingSamples.length === 0 ? (
               <div className={`text-center py-12 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
-                <div className="text-4xl mb-3">📝</div>
                 <p className="italic">尚未添加训练样本，请在上方添加至少一个对话样本</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
                 {trainingSamples.map((sample, index) => (
                   <div key={index} className={`rounded-lg p-4 relative group border ${
-                    mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'
+                    personaColors
+                      ? (mode === 'waibi' ? `bg-gray-900/50 ${personaColors.border}` : `bg-gray-50 ${personaColors.border}`)
+                      : (mode === 'waibi' ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200')
                   }`}>
                     <button
                       onClick={() => handleDeleteSample(index)}
@@ -347,9 +360,11 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
                       </div>
                       {sample.scenario && (
                         <div className={`text-xs px-2 py-1 rounded inline-block mt-1 ${
-                          mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                          personaColors
+                            ? (mode === 'waibi' ? `${personaColors.bg}/20 ${personaColors.text}` : `${personaColors.bg}/10 ${personaColors.text}`)
+                            : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                         }`}>
-                          📍 {sample.scenario}
+                          {sample.scenario}
                         </div>
                       )}
                     </div>
@@ -379,7 +394,7 @@ export default function MbtiTrainingDetail({ params }: { params: Promise<{ id: s
               <div className={`text-xs p-3 rounded-lg ${
                 mode === 'waibi' ? 'bg-gray-900/50 text-gray-300' : 'bg-gray-50 text-gray-600'
               }`}>
-                💡 创建模型实例时，当前训练集会自动同步到新实例中
+                创建模型实例时，当前训练集会自动同步到新实例中
               </div>
             </div>
           </div>

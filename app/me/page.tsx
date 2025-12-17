@@ -85,10 +85,10 @@ interface Subscription {
 export default function MePage() {
   const { mode } = useVibe();
   const router = useRouter();
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const secondaryBtn = mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  const accentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
+  const inputClass = mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white' : 'border border-gray-300 bg-white text-gray-900';
 
   const [me, setMe] = useState<Me["user"] | null>(null);
   const [error, setError] = useState('');
@@ -440,7 +440,7 @@ export default function MePage() {
   if (!me) {
     return (
       <div className="container mx-auto px-4 py-2 max-w-6xl">
-        <SectionHeader icon="👤" title="个人中心" subtitle="请先登录" />
+        <SectionHeader title="个人中心" subtitle="请先登录" />
         <div className={`text-center py-12 rounded-xl ${panelClass}`}>
           <div className="text-sm opacity-70">{error || '未登录'}</div>
         </div>
@@ -450,7 +450,7 @@ export default function MePage() {
 
   return (
     <div className="container mx-auto px-4 py-2 max-w-6xl">
-      <SectionHeader icon="👤" title="个人中心" subtitle="管理您的账户、订阅和数据" />
+      <SectionHeader title="个人中心" subtitle="管理您的账户、订阅和数据" />
 
       {/* 用户信息卡片 */}
       <div className={`rounded-xl shadow-md p-4 sm:p-6 mb-6 ${panelClass}`}>
@@ -503,7 +503,7 @@ export default function MePage() {
 
         {/* 编辑资料表单 */}
         {isEditing && (
-          <div className={`border-t pt-6 mt-6 ${mode === 'waibi' ? 'border-green-500/30' : 'border-gray-200'}`}>
+          <div className={`border-t pt-6 mt-6 ${mode === 'waibi' ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm mb-2">用户名</label>
@@ -1236,7 +1236,7 @@ export default function MePage() {
                   <span className="font-medium">月付计划</span>
                   <span className={`px-3 py-1 rounded-full text-xs ${
                     subscription.active 
-                      ? mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                      ? mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700'
                       : mode === 'waibi' ? 'bg-gray-800 text-gray-400' : 'bg-gray-200 text-gray-600'
                   }`}>
                     {subscription.active ? '已激活' : '未激活'}

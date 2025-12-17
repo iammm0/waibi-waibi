@@ -10,6 +10,7 @@ import ModelParameters from '@/components/model-parameters';
 import UniverseStatus from '@/components/universe-status';
 import { universeToast } from '@/components/universe-toast';
 import { universeConfirm } from '@/components/universe-confirm';
+import { getPersonaColors, getPersonaButtonClasses } from '@/lib/persona-colors';
 
 export interface ModelParams {
   temperature: number;
@@ -99,10 +100,20 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
   });
   const [currentSample, setCurrentSample] = useState<TrainingSample>({ input: '', response: '' });
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
-  const secondaryBtn = mode === 'waibi' ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100';
+  // 获取实例的人格颜色
+  const personaColors = instance?.personaCode ? getPersonaColors(instance.personaCode.toUpperCase(), mode) : null;
+  const accentBtnClasses = instance?.personaCode ? getPersonaButtonClasses(instance.personaCode.toUpperCase(), mode) : (mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600');
+  
+  const panelClass = personaColors 
+    ? (mode === 'waibi' ? `bg-black/90 ${personaColors.border} text-white` : `bg-white ${personaColors.border} text-gray-900`)
+    : (mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900');
+  const inputClass = personaColors
+    ? (mode === 'waibi' ? `${personaColors.border} bg-gray-900/50 text-white placeholder-gray-500` : `${personaColors.border} bg-white text-gray-900 placeholder-gray-400`)
+    : (mode === 'waibi' ? 'border border-gray-700 bg-gray-900/50 text-white placeholder-gray-500' : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400');
+  const accentBtn = personaColors ? accentBtnClasses : (mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600');
+  const secondaryBtn = personaColors
+    ? (mode === 'waibi' ? `${personaColors.border} bg-gray-800/50 hover:bg-gray-800` : `${personaColors.border} bg-gray-50 hover:bg-gray-100`)
+    : (mode === 'waibi' ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800' : 'border border-gray-300 bg-gray-50 hover:bg-gray-100');
 
   useEffect(() => {
     fetchInstance();
@@ -311,9 +322,9 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                   ? 'bg-blue-100 text-blue-700 border border-blue-300'
                   : 'bg-purple-100 text-purple-700 border border-purple-300'
             }`}>
-              {instance.developmentLevel === 2 ? '🔄 二次开发' : 
-               instance.developmentLevel === 3 ? '🔄 三次开发' : 
-               `🔄 ${instance.developmentLevel}次开发`}
+              {instance.developmentLevel === 2 ? ' 二次开发' :
+               instance.developmentLevel === 3 ? ' 三次开发' :
+               ` ${instance.developmentLevel}次开发`}
             </span>
           )}
         </div>
@@ -329,7 +340,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
               : 'bg-yellow-50 border border-yellow-200'
           }`}>
             <div className={`text-sm font-medium ${mode === 'waibi' ? 'text-yellow-300' : 'text-yellow-700'}`}>
-              ✨ 原创作者: <span className="font-bold">{instance.originalUserName}</span>
+              原创作者: <span className="font-bold">{instance.originalUserName}</span>
             </div>
             {instance.developerUserName && (
               <div className={`text-sm mt-1 ${mode === 'waibi' ? 'text-blue-300' : 'text-blue-700'}`}>
@@ -465,7 +476,9 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
               {instance.trainingSamples.map((sample, index) => (
                 <div key={index} className={`rounded-lg p-4 border ${
-                  mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'
+                  personaColors
+                    ? (mode === 'waibi' ? `bg-gray-900/50 ${personaColors.border}` : `bg-gray-50 ${personaColors.border}`)
+                    : (mode === 'waibi' ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200')
                 }`}>
                   <div className="font-medium mb-2">
                     <span className={`text-xs px-2 py-0.5 rounded mr-2 ${
@@ -481,7 +494,9 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                   </div>
                   {sample.scenario && (
                     <div className={`text-xs px-2 py-1 rounded inline-block mt-1 ${
-                      mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                      personaColors
+                        ? (mode === 'waibi' ? `${personaColors.bg}/20 ${personaColors.text}` : `${personaColors.bg}/10 ${personaColors.text}`)
+                        : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                     }`}>
                       📍 {sample.scenario}
                     </div>
@@ -552,7 +567,9 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                   <span
                     key={index}
                     className={`px-2 py-1 rounded text-sm ${
-                      mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                      personaColors
+                        ? (mode === 'waibi' ? `${personaColors.bg}/20 ${personaColors.text}` : `${personaColors.bg}/10 ${personaColors.text}`)
+                        : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                     }`}
                   >
                     {tag}
@@ -599,7 +616,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
             <div className="pt-4 border-t">
               <h3 className="text-lg font-semibold mb-4">训练集管理</h3>
               <div className="space-y-4 mb-4">
-                <div className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-emerald-400/30' : 'bg-gray-50 border-gray-200'}`}>
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium mb-2">用户输入</label>
@@ -648,7 +665,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                     {editForm.trainingSamples.map((sample, index) => (
                       <div
                         key={index}
-                        className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}
+                        className={`p-4 rounded-lg border ${mode === 'waibi' ? 'bg-gray-900/50 border-emerald-400/30' : 'bg-gray-50 border-gray-200'}`}
                       >
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1 space-y-2">
@@ -662,7 +679,9 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                             </div>
                             {sample.scenario && (
                               <div className={`text-xs px-2 py-1 rounded inline-block mt-1 ${
-                                mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'
+                                personaColors
+                        ? (mode === 'waibi' ? `${personaColors.bg}/20 ${personaColors.text}` : `${personaColors.bg}/10 ${personaColors.text}`)
+                        : (mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700')
                               }`}>
                                 📍 {sample.scenario}
                               </div>
@@ -735,7 +754,7 @@ export default function PersonaInstanceDetailPage({ params }: { params: Promise<
                 </div>
                 {instance.originalUserName && (
                   <div className={`text-sm ${mode === 'waibi' ? 'text-yellow-300' : 'text-yellow-700'}`}>
-                    ✨ 原创作者: <span className="font-bold">{instance.originalUserName}</span>
+                    原创作者: <span className="font-bold">{instance.originalUserName}</span>
                   </div>
                 )}
                 {instance.developerUserName && (

@@ -54,8 +54,8 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const cardClass = mode === 'waibi' ? 'bg-black/50 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const cardClass = mode === 'waibi' ? 'bg-black/50 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -113,7 +113,6 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <SectionHeader 
-        icon="👥"
         title={isOwn ? '我的公开主页' : `${profile.username || profile.name || '用户'}的主页`}
         subtitle={isOwn ? '这是其他人看到的你的公开信息' : '公开信息'}
       />
@@ -139,7 +138,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
         <div className="space-y-6">
           {/* 个性签名 */}
           {profile.signature && (
-            <div className="text-lg italic opacity-80 border-l-4 pl-4" style={{ borderColor: mode === 'waibi' ? 'rgba(34, 197, 94, 0.5)' : 'var(--accent-cyan)' }}>
+            <div className={`text-lg italic opacity-80 border-l-4 pl-4 ${mode === 'waibi' ? 'border-gray-600' : 'border-gray-400'}`}>
               {profile.signature}
             </div>
           )}
@@ -233,7 +232,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
                   <span
                     key={index}
                     className={`px-3 py-1 rounded-full text-sm ${
-                      mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
+                      mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700'
                     }`}
                   >
                     {interest}
@@ -435,7 +434,7 @@ export default function PublicProfilePage({ params }: { params: Promise<{ userna
           <div className="mt-6 pt-6 border-t border-current/20">
             <button
               onClick={() => router.push('/me')}
-              className={`px-4 py-2 rounded-lg ${mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110'} text-white`}
+              className={`px-4 py-2 rounded-lg ${mode === 'waibi' ? 'bg-emerald-400 hover:bg-emerald-500' : 'bg-[var(--accent-cyan)] hover:brightness-110'} text-white`}
             >
               编辑个人资料
             </button>
