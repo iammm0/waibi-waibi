@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Waibi Waibi | Waibi Babu",
         description:
-            "在留言板里查看我的 Waibi 语录，在聊一聊里与我的意识体交流！",
+            "在聊一聊里与我的意识体交流！",
     },
 };
 
@@ -23,9 +23,33 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="zh-CN" suppressHydrationWarning data-mode="waibi" data-scroll-behavior="smooth">
+        <html lang="zh-CN" suppressHydrationWarning data-scroll-behavior="smooth">
+        <head>
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        (function() {
+                            try {
+                                const savedMode = localStorage.getItem('waibi-mode');
+                                const mode = (savedMode === 'waibi' || savedMode === 'rational') ? savedMode : 'rational';
+                                document.documentElement.setAttribute('data-mode', mode);
+                                if (mode === 'waibi') {
+                                    document.documentElement.classList.add('dark');
+                                    document.documentElement.style.colorScheme = 'dark';
+                                } else {
+                                    document.documentElement.classList.remove('dark');
+                                    document.documentElement.style.colorScheme = 'light';
+                                }
+                            } catch (e) {
+                                document.documentElement.setAttribute('data-mode', 'rational');
+                            }
+                        })();
+                    `,
+                }}
+            />
+        </head>
         <body>
-        <Providers initialMode="waibi">
+        <Providers initialMode="rational">
             {children}
             <UniverseToastContainer />
             <UniverseConfirmContainer />

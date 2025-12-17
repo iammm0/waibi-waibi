@@ -16,31 +16,7 @@
   /* 噪点效果 */
   --noise-opacity: 0.1;        /* 噪点层的透明度 */
 
-  /* 字体栈 */
-  --pixel-font: 'Press Start 2P'; /* 像素风格字体 */
-  --font-sans-cn: 'ZCOOLXiaoWei'; /* 中文字体 */
-  --body-font: var(--font-sans-cn), var(--pixel-font); /* 全局字体栈：中文字体优先，英文字体其次，默认使用 monospace 字体 */
-
   color-scheme: dark light;   /* 设置支持的颜色模式：暗黑和明亮 */
-}
-
-/* ==================== 字体加载优化 ==================== */
-@font-face {
-  font-family: 'Press Start 2P';               /* 定义字体名称 */
-  src: url('/fonts/PressStart2P-Regular.ttf') format('truetype'); /* 引入字体文件 */
-  unicode-range: U+0000-00FF;                  /* 只加载拉丁字符 */
-  font-display: swap;                          /* 字体加载时，使用系统字体直到字体加载完成 */
-}
-
-@font-face {
-  font-family: 'ZCOOLXiaoWei';                /* 定义中文字体 */
-  src: url('/fonts/ZCOOLXiaoWei-Regular.ttf') format('truetype'); /* 引入中文字体文件 */
-  font-display: swap;                         /* 字体加载时，使用系统字体直到字体加载完成 */
-}
-
-
-.font-CyberGame {
-  font-family: 'Press Start 2P', sans-serif;
 }
 
 
@@ -59,20 +35,11 @@ html {
 }
 
 body {
-  font-family: var(--body-font), sans-serif; /* 默认字体栈，中文字体优先，英文字体为后备 */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* 系统默认字体栈 */
   margin: 0;                             /* 去除页面默认边距 */
   min-height: 100vh;                     /* 设置页面最小高度为 100% 视口高度 */
   background-color: inherit;             /* 背景色继承 */
   color: inherit;                        /* 文字颜色继承 */
-  font-family: var(--body-font), fangsong; /* 全局使用中文字体，英文字体为后备 */
-}
-
-body:lang(zh) {
-  font-family: var(--font-sans-cn), var(--pixel-font), sans-serif; /* 中文字体优先 */
-}
-
-body:lang(en) {
-  font-family: var(--pixel-font), sans-serif; /* 英文字体优先 */
 }
 
 html[data-mode="waibi"] & {
@@ -131,7 +98,7 @@ main:has([data-chat-page]) {
 /* ==================== 文本样式优化 ==================== */
 .pixel-text,
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--pixel-font), fangsong; /* 像素字体风格用于标题 */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* 系统默认字体 */
   letter-spacing: 0.08em;                    /* 字母间距 */
 }
 
@@ -262,5 +229,15 @@ html[data-motion="wild"] .entry-hero {
   .page-transitioning main {
     animation: none !important;
   }
+}
+
+/* ==================== 滚动条隐藏 ==================== */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 

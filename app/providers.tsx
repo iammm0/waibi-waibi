@@ -31,17 +31,22 @@ export default function Providers({
   children: React.ReactNode;
   initialMode?: VibeMode;
 }) {
-  const [mode, setMode] = useState<VibeMode>(initialMode);
-
-  useEffect(() => {
-    // 仅在客户端读取 localStorage
+  // 从 HTML 的 data-mode 属性读取初始值（由内联脚本设置）
+  const getInitialMode = (): VibeMode => {
     if (typeof window !== "undefined") {
+      const htmlMode = document.documentElement.getAttribute('data-mode');
+      if (htmlMode === "waibi" || htmlMode === "rational") {
+        return htmlMode;
+      }
       const savedMode = localStorage.getItem(MODE_KEY) as VibeMode | null;
       if (savedMode === "waibi" || savedMode === "rational") {
-        setMode(savedMode);
+        return savedMode;
       }
     }
-  }, []);
+    return initialMode;
+  };
+
+  const [mode, setMode] = useState<VibeMode>(getInitialMode);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
