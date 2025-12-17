@@ -46,3 +46,13 @@ README.md
 Dockerfile
 docker-compose.yml
 
+# 开发相关文件（减少复制时间）
+commit-messages/
+*.md
+!prompts/README.md
+
+# 临时文件
+*.tmp
+*.temp
+.cache
+
