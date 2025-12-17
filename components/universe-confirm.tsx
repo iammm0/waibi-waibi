@@ -19,12 +19,6 @@ interface UniverseConfirmProps {
   onClose: (id: string, confirmed: boolean) => void;
 }
 
-const CONFIRM_ICONS = {
-  warning: '⚠️',
-  danger: '💥',
-  info: '📡',
-};
-
 const CONFIRM_TITLES = {
   warning: { waibi: '宇宙警告', rational: '警告' },
   danger: { waibi: '危险操作', rational: '危险操作' },
@@ -41,7 +35,7 @@ function UniverseConfirm({ dialog, onClose }: UniverseConfirmProps) {
   }, []);
 
   const containerClass = mode === 'waibi'
-    ? 'bg-black/90 border border-green-500/30 text-white shadow-lg shadow-green-500/20'
+    ? 'bg-black/90 border border-gray-700 text-white shadow-lg shadow-gray-900/20'
     : 'bg-white border border-gray-200 text-gray-900 shadow-lg';
 
   const typeColors = {
@@ -59,10 +53,10 @@ function UniverseConfirm({ dialog, onClose }: UniverseConfirmProps) {
   const confirmBtn = mode === 'waibi'
     ? dialog.type === 'danger'
       ? 'bg-red-500 hover:bg-red-600 text-white'
-      : 'bg-green-500 hover:bg-green-600 text-white'
+      : 'bg-gray-600 hover:bg-gray-700 text-white'
     : dialog.type === 'danger'
       ? 'bg-red-500 hover:bg-red-600 text-white'
-      : 'bg-[var(--accent-cyan)] hover:brightness-110 text-white';
+      : 'bg-gray-500 hover:bg-gray-600 text-white';
 
   const cancelBtn = mode === 'waibi'
     ? 'border border-gray-500/50 bg-gray-800/50 hover:bg-gray-800 text-gray-300'
@@ -103,9 +97,6 @@ function UniverseConfirm({ dialog, onClose }: UniverseConfirmProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4 mb-4">
-          <div className="text-3xl flex-shrink-0">
-            {CONFIRM_ICONS[dialog.type || 'warning']}
-          </div>
           <div className="flex-1 min-w-0">
             {dialog.title && (
               <h3 className={`text-lg font-semibold mb-2 ${

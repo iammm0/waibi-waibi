@@ -13,13 +13,13 @@ interface ModelParametersProps {
 export default function ModelParameters({ params, onParamChange, isAdvancedMode }: ModelParametersProps) {
   const { mode } = useVibe();
   const panelClass = mode === 'waibi'
-    ? 'bg-black border border-green-500/30 shadow-[0_0_10px_rgba(139,255,78,0.3)]'
+    ? 'bg-black border border-gray-700 shadow-lg'
     : 'bg-white border border-gray-200 shadow-sm';
   const sectionTitleClass = mode === 'waibi' ? 'text-white' : 'text-gray-900';
   const labelTextClass = mode === 'waibi' ? 'text-gray-300' : 'text-gray-700';
   const trackClass = mode === 'waibi' ? 'bg-gray-900' : 'bg-gray-200';
-  const accentClass = mode === 'waibi' ? 'accent-green-500' : 'accent-[var(--accent-cyan)]';
-  const hintTextClass = mode === 'waibi' ? 'text-green-400' : 'text-gray-500';
+  const accentClass = mode === 'waibi' ? 'accent-gray-500' : 'accent-gray-500';
+  const hintTextClass = mode === 'waibi' ? 'text-gray-300' : 'text-gray-500';
 
   // 格式化参数值显示
   const formatValue = (param: keyof ModelParams, value: number): string => {

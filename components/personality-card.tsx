@@ -4,6 +4,8 @@
 import Link from 'next/link';
 import type { Personality } from '@/lib/mbti';
 import ProgressiveImage from './progressive-image';
+import { getPersonaCardClasses } from '@/lib/persona-colors';
+import { useVibe } from '@/app/providers';
 
 type Focus = 'top' | 'center' | 'bottom';
 type Props = Personality & {
@@ -21,6 +23,9 @@ export default function PersonalityCard({
                                             focus = 'center',
                                             focal,
                                         }: Props) {
+    const { mode } = useVibe();
+    const cardClass = getPersonaCardClasses(name, mode);
+    
     // Image 的 object-position
     const objectPosition = focal
         ? `${focal[0]}% ${focal[1]}%`
@@ -39,7 +44,7 @@ export default function PersonalityCard({
             className="group block w-full sm:w-1/2 md:w-1/4 p-2"
             prefetch
         >
-            <div className="border rounded-xl overflow-hidden shadow-sm hover:shadow-lg bg-white dark:bg-gray-800 transition">
+            <div className={`${cardClass} rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition`}>
                 {/* 👇 用"纵横比"而不是固定高度，移动端能多露出上半身 */}
                 <div className="relative aspect-[4/3] md:aspect-[16/10] bg-gray-100 dark:bg-gray-700">
                     <ProgressiveImage

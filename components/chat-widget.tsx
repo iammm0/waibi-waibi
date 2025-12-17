@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {MdSend} from "react-icons/md";
-import {FaSpinner} from "react-icons/fa6";
+import { useVibe } from '@/app/providers';
 
 /* ============ 通用 Scramble 文本渲染（EntryHero 同款） ============ */
 function scrambleText(target: string, progress: number, glyphs = "█▚▞▛ΔΩ✶☄") {
@@ -17,11 +16,11 @@ function scrambleText(target: string, progress: number, glyphs = "█▚▞▛Δ
 }
 
 function ScrambleText({
-                          text,
-                          duration = 800,
-                          step = 60,
-                          className = "",
-                      }: {
+    text,
+    duration = 800,
+    step = 60,
+    className = "",
+}: {
     text: string;
     duration?: number;
     step?: number;
@@ -54,8 +53,8 @@ function ScrambleText({
 
     return (
         <span className={className} suppressHydrationWarning>
-      {display}
-    </span>
+            {display}
+        </span>
     );
 }
 
@@ -73,7 +72,7 @@ function parseReply(raw: string): StructuredReply | null {
     try {
         const obj = JSON.parse(raw);
         if (typeof obj === "object" && obj) return obj as StructuredReply;
-    } catch (_) {}
+    } catch (_) { }
     return null;
 }
 
@@ -131,6 +130,7 @@ function HeroReply({ data }: { data: StructuredReply }) {
 type Msg = { role: "user" | "assistant" | "system"; content: string };
 
 export default function ChatWidget() {
+    const { mode } = useVibe();
     const [messages, setMessages] = useState<Msg[]>([
         { role: "system", content: "你已连接到 Waibi 的模型中转。可以返回纯文本，或返回 JSON：{title, subtitle, bullets, links}。" },
     ]);
@@ -184,18 +184,16 @@ export default function ChatWidget() {
                     .map((m, i) => (
                         <div
                             key={i}
-                            className={`rounded-lg px-3 py-2 text-sm leading-relaxed ${
-                                m.role === "user"
-                                    ? "bg-[color:color-mix(in_srgb,currentColor_10%,transparent)]"
-                                    : "bg-[color:color-mix(in_srgb,currentColor_6%,transparent)]"
-                            }`}
+                            className={`rounded-lg px-3 py-2 text-sm leading-relaxed ${m.role === "user"
+                                ? "bg-[color:color-mix(in_srgb,currentColor_10%,transparent)]"
+                                : "bg-[color:color-mix(in_srgb,currentColor_6%,transparent)]"
+                                }`}
                         >
                             <div
-                                className={`opacity-70 text-[0.75rem] mb-1 ${
-                                    m.role === "user"
-                                        ? "text-[var(--accent-cyan)]"
-                                        : "text-[var(--accent-purple)]"
-                                }`}
+                                className={`opacity-70 text-[0.75rem] mb-1 ${m.role === "user"
+                                    ? (mode === 'waibi' ? "text-gray-300" : "text-gray-700")
+                                    : (mode === 'waibi' ? "text-gray-400" : "text-gray-600")
+                                    }`}
                             >
                                 {m.role === "user" ? "你" : "神秘人"}
                             </div>
@@ -204,8 +202,7 @@ export default function ChatWidget() {
                     ))}
                 {loading && (
                     <div className="flex items-center justify-center space-x-2">
-                        <FaSpinner className="animate-spin text-green-500" size={24} />
-                        <span>神秘人正在考虑怎么好好说话……</span>
+                        <span>加载中...</span>
                     </div>
                 )}
                 <div ref={bottomRef} />
@@ -254,7 +251,7 @@ export default function ChatWidget() {
                     className="badge glitch-hover"
                     aria-disabled={loading || !input.trim()}
                 >
-                    <MdSend size={24} />
+                    发送
                 </button>
             </form>
         </section>

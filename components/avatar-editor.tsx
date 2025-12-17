@@ -21,9 +21,9 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-black text-white' : 'border border-gray-300 bg-white text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
+  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900';
+  const inputClass = mode === 'waibi' ? 'border border-gray-700 bg-black text-white' : 'border border-gray-300 bg-white text-gray-900';
+  const accentBtn = mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600';
 
   const canvasSize = 400;
   const outputSize = 200;
@@ -252,107 +252,117 @@ export default function AvatarEditor({ currentAvatarUrl, onSave, onCancel }: Ava
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-4">
-      <div className={`${panelClass} rounded-lg p-6 max-w-lg w-full shadow-lg`}>
-        <h2 className="text-xl font-bold mb-4">编辑头像</h2>
-
-        <div className="mb-4">
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className={`px-4 py-2 rounded-lg ${accentBtn} text-white mb-2`}
-          >
-            选择图片
-          </button>
-        </div>
-
-        <div className="mb-4 flex justify-center">
-          <canvas
-            ref={canvasRef}
-            width={canvasSize}
-            height={canvasSize}
-            className="border rounded-lg cursor-move max-w-full h-auto"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            style={{ maxWidth: '100%', height: 'auto' }}
-          />
-        </div>
-
-        {/* 控制面板 */}
-        {image && (
-          <div className="mb-4 space-y-4">
-            {/* 缩放控制 */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">缩放: {Math.round(scale * 100)}%</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleZoomOut}
-                    disabled={scale <= 0.3}
-                    className={`px-3 py-1 rounded text-sm ${accentBtn} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    −
-                  </button>
-                  <button
-                    onClick={handleZoomIn}
-                    disabled={scale >= 3}
-                    className={`px-3 py-1 rounded text-sm ${accentBtn} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="0.3"
-                max="3"
-                step="0.1"
-                value={scale}
-                onChange={(e) => setScale(parseFloat(e.target.value))}
-                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: mode === 'waibi' 
-                    ? `linear-gradient(to right, #22c55e 0%, #22c55e ${((scale - 0.3) / 2.7) * 100}%, #333 ${((scale - 0.3) / 2.7) * 100}%, #333 100%)`
-                    : `linear-gradient(to right, var(--accent-cyan) 0%, var(--accent-cyan) ${((scale - 0.3) / 2.7) * 100}%, #ddd ${((scale - 0.3) / 2.7) * 100}%, #ddd 100%)`
-                }}
-              />
-            </div>
-
-            {/* 旋转控制 */}
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">旋转: {rotation}°</label>
-              <button
-                onClick={handleRotate}
-                className={`px-4 py-2 rounded text-sm ${accentBtn} text-white`}
-              >
-                🔄 旋转 90°
-              </button>
-            </div>
-
-            {/* 重置按钮 */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleReset}
-                className={`px-3 py-1 rounded text-sm ${inputClass}`}
-              >
-                🔄 重置
-              </button>
-            </div>
+      <div className={`${panelClass} rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] flex flex-col`}>
+        {/* 固定头部 */}
+        <div className="flex-shrink-0 p-4 border-b border-opacity-20" style={{
+          borderColor: mode === 'waibi' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 0, 0, 0.1)'
+        }}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold">编辑头像</h2>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className={`px-4 py-2 rounded-lg text-sm ${accentBtn} text-white`}
+            >
+              选择图片
+            </button>
           </div>
-        )}
-
-        <div className="mb-4 text-center text-sm opacity-70">
-          拖拽图片调整位置，使用滑块缩放，对齐绿色框
         </div>
 
-        <div className="flex gap-2 justify-end">
+        {/* 可滚动内容区域 */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="mb-4 flex justify-center">
+            <canvas
+              ref={canvasRef}
+              width={canvasSize}
+              height={canvasSize}
+              className="border rounded-lg cursor-move max-w-full h-auto"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ maxWidth: '100%', height: 'auto' }}
+            />
+          </div>
+
+          {/* 控制面板 */}
+          {image && (
+            <div className="mb-4 space-y-4">
+              {/* 缩放控制 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">缩放: {Math.round(scale * 100)}%</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleZoomOut}
+                      disabled={scale <= 0.3}
+                      className={`px-3 py-1 rounded text-sm ${accentBtn} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      −
+                    </button>
+                    <button
+                      onClick={handleZoomIn}
+                      disabled={scale >= 3}
+                      className={`px-3 py-1 rounded text-sm ${accentBtn} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="3"
+                  step="0.1"
+                  value={scale}
+                  onChange={(e) => setScale(parseFloat(e.target.value))}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: mode === 'waibi' 
+                      ? `linear-gradient(to right, #22c55e 0%, #22c55e ${((scale - 0.3) / 2.7) * 100}%, #333 ${((scale - 0.3) / 2.7) * 100}%, #333 100%)`
+                      : `linear-gradient(to right, var(--accent-cyan) 0%, var(--accent-cyan) ${((scale - 0.3) / 2.7) * 100}%, #ddd ${((scale - 0.3) / 2.7) * 100}%, #ddd 100%)`
+                  }}
+                />
+              </div>
+
+              {/* 旋转控制 */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">旋转: {rotation}°</label>
+                <button
+                  onClick={handleRotate}
+                  className={`px-4 py-2 rounded text-sm ${accentBtn} text-white`}
+                >
+                  🔄 旋转 90°
+                </button>
+              </div>
+
+              {/* 重置按钮 */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleReset}
+                  className={`px-3 py-1 rounded text-sm ${inputClass}`}
+                >
+                  🔄 重置
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="text-center text-sm opacity-70">
+            拖拽图片调整位置，使用滑块缩放，对齐绿色框
+          </div>
+        </div>
+
+        {/* 固定底部按钮 */}
+        <div className="flex-shrink-0 p-4 border-t border-opacity-20 flex gap-2 justify-end" style={{
+          borderColor: mode === 'waibi' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 0, 0, 0.1)'
+        }}>
           <button onClick={onCancel} className={`px-4 py-2 rounded ${inputClass}`}>
             取消
           </button>

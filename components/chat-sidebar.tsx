@@ -41,17 +41,17 @@ export default function ChatSidebar({
   const { mode } = useVibe();
   const router = useRouter();
 
-  const sidebarClass = mode === 'waibi' 
-    ? 'bg-black/95 border-r border-green-500/20 text-white shadow-lg' 
+  const sidebarClass = mode === 'waibi'
+    ? 'bg-black/95 border-r border-gray-700 text-white shadow-lg'
     : 'bg-white border-r border-gray-200 text-gray-900 shadow-sm';
-  const inputClass = mode === 'waibi' 
-    ? 'border border-green-500/30 bg-gray-900/50 text-white placeholder-gray-500' 
+  const inputClass = mode === 'waibi'
+    ? 'border border-gray-700 bg-gray-900/50 text-white placeholder-gray-500'
     : 'border border-gray-300 bg-white text-gray-900 placeholder-gray-400';
   const buttonClass = mode === 'waibi'
-    ? 'bg-gray-800/80 hover:bg-gray-700 text-white border border-green-500/20'
+    ? 'bg-gray-800/80 hover:bg-gray-700 text-white border border-gray-700'
     : 'bg-gray-50 hover:bg-gray-100 text-gray-900 border border-gray-200';
   const headerClass = mode === 'waibi'
-    ? 'bg-gradient-to-r from-green-500/10 to-transparent border-b border-green-500/20'
+    ? 'bg-gradient-to-r from-gray-800/50 to-transparent border-b border-gray-700'
     : 'bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-200';
 
   if (isCollapsed) {
@@ -69,7 +69,7 @@ export default function ChatSidebar({
   }
 
   return (
-    <div className={`${sidebarClass} w-64 sm:w-72 flex flex-col transition-all duration-300 h-full`}>
+    <div className={`${sidebarClass} w-64 sm:w-72 -ml-2 sm:ml-0 flex flex-col transition-all duration-300 h-full`}>
       {/* 头部 */}
       <div className={`p-3 sm:p-4 flex items-center justify-between ${headerClass}`}>
         <h2 className="text-base sm:text-lg font-semibold">聊天设置</h2>
@@ -92,7 +92,7 @@ export default function ChatSidebar({
             </label>
             <button
               onClick={() => router.push('/persona-instance/create')}
-              className={`text-xs px-2 py-1 rounded ${mode === 'waibi' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+              className={`text-xs px-2 py-1 rounded ${mode === 'waibi' ? 'bg-gray-600/20 text-gray-300 hover:bg-gray-600/30' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
               + 新建
             </button>
@@ -106,7 +106,7 @@ export default function ChatSidebar({
               <div className="mb-2">还没有创建模型实例</div>
               <button
                 onClick={() => router.push('/persona-instance/create')}
-                className={`px-3 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110'} text-white`}
+                className={`px-3 py-1 rounded text-xs ${mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
               >
                 立即创建
               </button>
@@ -114,7 +114,7 @@ export default function ChatSidebar({
           ) : (
             <>
               <select
-                className={`w-full p-2 sm:p-2.5 rounded-lg text-xs sm:text-sm transition-all ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
+                className={`w-full p-2 sm:p-2.5 rounded-lg text-xs sm:text-sm transition-all ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-gray-500/50' : 'focus:ring-gray-500'}`}
                 value={instanceId}
                 onChange={(e) => onInstanceChange(e.target.value)}
               >
@@ -139,7 +139,7 @@ export default function ChatSidebar({
             选择模型
           </label>
           <select
-            className={`w-full p-2 sm:p-2.5 rounded-lg text-xs sm:text-sm transition-all ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500/50' : 'focus:ring-[var(--accent-cyan)]'}`}
+            className={`w-full p-2 sm:p-2.5 rounded-lg text-xs sm:text-sm transition-all ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-emerald-400/50' : 'focus:ring-[var(--accent-cyan)]'}`}
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
           >
@@ -151,8 +151,8 @@ export default function ChatSidebar({
 
         {/* 当前选择信息卡片 */}
         {instanceId && instances.find(i => i._id === instanceId) && (
-          <div className={`p-3 sm:p-4 rounded-xl border ${mode === 'waibi' ? 'bg-gray-900/60 border-green-500/20' : 'bg-gray-50 border-gray-200'}`}>
-            <div className={`text-xs font-medium mb-2.5 ${mode === 'waibi' ? 'text-green-400' : 'text-gray-500'}`}>
+          <div className={`p-3 sm:p-4 rounded-xl border ${mode === 'waibi' ? 'bg-gray-900/60 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`text-xs font-medium mb-2.5 ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-500'}`}>
               当前配置
             </div>
             <div className={`text-base font-semibold mb-1 ${mode === 'waibi' ? 'text-white' : 'text-gray-900'}`}>
@@ -162,9 +162,8 @@ export default function ChatSidebar({
               {model}
             </div>
             {instances.find(i => i._id === instanceId)?.personaCode && (
-              <div className={`text-xs px-2 py-1 rounded inline-block ${
-                mode === 'waibi' ? 'bg-green-500/20 text-green-400' : 'bg-blue-100 text-blue-700'
-              }`}>
+              <div className={`text-xs px-2 py-1 rounded inline-block ${mode === 'waibi' ? 'bg-gray-600/20 text-gray-300' : 'bg-gray-100 text-gray-700'
+                }`}>
                 {instances.find(i => i._id === instanceId)?.personaCode.toUpperCase()}
               </div>
             )}

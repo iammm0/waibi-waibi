@@ -17,13 +17,6 @@ interface UniverseToastProps {
   onClose: (id: string) => void;
 }
 
-const TOAST_ICONS = {
-  success: '✨',
-  error: '💥',
-  info: '📡',
-  warning: '⚠️',
-};
-
 const TOAST_TITLES = {
   success: { waibi: '操作成功！', rational: '操作成功' },
   error: { waibi: '宇宙信号中断', rational: '操作失败' },
@@ -50,13 +43,13 @@ function UniverseToast({ toast, onClose }: UniverseToastProps) {
   }, [toast.id, toast.duration, onClose]);
 
   const containerClass = mode === 'waibi'
-    ? 'bg-black/90 border border-green-500/30 text-white shadow-lg shadow-green-500/20'
+    ? 'bg-black/90 border border-gray-700 text-white shadow-lg shadow-gray-900/20'
     : 'bg-white border border-gray-200 text-gray-900 shadow-lg';
   
   const typeColors = {
     success: mode === 'waibi'
-      ? 'border-green-500/50 bg-green-500/10 text-green-400'
-      : 'border-green-300 bg-green-50 text-green-700',
+      ? 'border-gray-600/50 bg-gray-600/10 text-gray-300'
+      : 'border-gray-300 bg-gray-50 text-gray-700',
     error: mode === 'waibi'
       ? 'border-red-500/50 bg-red-500/10 text-red-400'
       : 'border-red-300 bg-red-50 text-red-700',
@@ -79,9 +72,6 @@ function UniverseToast({ toast, onClose }: UniverseToastProps) {
       }}
     >
       <div className="flex items-start gap-3">
-        <div className="text-2xl flex-shrink-0">
-          {TOAST_ICONS[toast.type]}
-        </div>
         <div className="flex-1 min-w-0">
           <div className={`font-semibold text-sm mb-1 ${
             mode === 'waibi' ? 'text-white' : 'text-gray-900'

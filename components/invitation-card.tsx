@@ -14,12 +14,12 @@ export default function InvitationCard() {
   }, []);
 
   const cardClass = mode === 'waibi' 
-    ? 'bg-black/90 border-2 border-green-500/50 text-white shadow-[0_0_30px_rgba(21,243,255,0.3)]' 
-    : 'bg-white/95 border-2 border-[var(--accent-cyan)]/50 text-gray-900 shadow-lg';
+    ? 'bg-black/90 border-2 border-gray-600 text-white shadow-lg' 
+    : 'bg-white/95 border-2 border-gray-400 text-gray-900 shadow-lg';
 
   const glowClass = mode === 'waibi'
-    ? 'shadow-[0_0_20px_rgba(21,243,255,0.5)]'
-    : 'shadow-[0_0_20px_rgba(21,243,255,0.3)]';
+    ? 'shadow-lg'
+    : 'shadow-lg';
 
   if (!mounted) return null;
 
@@ -34,7 +34,7 @@ export default function InvitationCard() {
     >
       <div className={`${cardClass} rounded-2xl p-4 sm:p-6 max-w-xs cursor-pointer backdrop-blur-sm relative overflow-hidden`}>
         <div className="flex items-start gap-3 sm:gap-4">
-          <div className={`text-3xl sm:text-4xl ${mode === 'waibi' ? 'text-green-400' : 'text-[var(--accent-cyan)]'}`}>
+          <div className={`text-3xl sm:text-4xl ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>
             ✉️
           </div>
           <div className="flex-1">
@@ -52,12 +52,12 @@ export default function InvitationCard() {
         
         {/* 装饰性边框动画 */}
         <div className={`absolute inset-0 rounded-2xl border-2 ${
-          mode === 'waibi' ? 'border-green-500/30' : 'border-[var(--accent-cyan)]/30'
+          mode === 'waibi' ? 'border-gray-600' : 'border-gray-400'
         } opacity-0 ${isHovered ? 'opacity-100' : ''} transition-opacity duration-300 pointer-events-none`} />
         
         {/* 背景光效 */}
         <div className={`absolute -inset-4 blur-xl opacity-20 ${
-          mode === 'waibi' ? 'bg-green-500' : 'bg-[var(--accent-cyan)]'
+          mode === 'waibi' ? 'bg-gray-600' : 'bg-gray-400'
         } ${isHovered ? 'opacity-30' : ''} transition-opacity duration-300 pointer-events-none`} />
       </div>
     </Link>

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useVibe } from '@/app/providers';
-import { FaSpinner } from 'react-icons/fa6';
+import { getPersonaColors, getPersonaButtonClasses } from '@/lib/persona-colors';
 
 // 预设的模型列表（与persona-chat保持一致）
 const DEFAULT_MODELS = [
@@ -84,9 +84,18 @@ export default function TrainingPreview({ personaCode, personaName }: TrainingPr
     setMessages([]);
   };
 
-  const panelClass = mode === 'waibi' ? 'bg-black/90 border border-green-500/30 text-white' : 'bg-white border border-gray-200 text-gray-900';
-  const inputClass = mode === 'waibi' ? 'border border-green-500/30 bg-black text-white' : 'border border-gray-300 bg-white text-gray-900';
-  const accentBtn = mode === 'waibi' ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--accent-cyan)] hover:brightness-110';
+  // 获取人格颜色
+  const personaColors = personaCode ? getPersonaColors(personaCode.toUpperCase(), mode) : null;
+  const accentBtnClasses = personaCode ? getPersonaButtonClasses(personaCode.toUpperCase(), mode) : (mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600');
+  
+  const panelClass = personaColors 
+    ? (mode === 'waibi' ? `bg-black/90 ${personaColors.border} text-white` : `bg-white ${personaColors.border} text-gray-900`)
+    : (mode === 'waibi' ? 'bg-black/90 border border-gray-700 text-white' : 'bg-white border border-gray-200 text-gray-900');
+  const inputClass = personaColors
+    ? (mode === 'waibi' ? `${personaColors.border} bg-black text-white` : `${personaColors.border} bg-white text-gray-900`)
+    : (mode === 'waibi' ? 'border border-gray-700 bg-black text-white' : 'border border-gray-300 bg-white text-gray-900');
+  const accentBtn = personaColors ? accentBtnClasses : (mode === 'waibi' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600');
+  const focusRing = personaColors ? personaColors.focus : (mode === 'waibi' ? 'focus:ring-gray-500/50' : 'focus:ring-gray-500');
 
   return (
     <div className={`rounded-xl shadow-md p-6 ${panelClass}`}>
@@ -95,7 +104,11 @@ export default function TrainingPreview({ personaCode, personaName }: TrainingPr
         <div className="flex items-center gap-2">
           <label className={`text-sm ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>模型</label>
           <select
-            className={`rounded-md border px-2 py-1 text-sm focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500 bg-black text-white border-green-500/30' : 'focus:ring-[var(--accent-cyan)] bg-white text-gray-900 border-gray-300'}`}
+            className={`rounded-md border px-2 py-1 text-sm focus:outline-none focus:ring-2 ${
+              personaColors
+                ? (mode === 'waibi' ? `${focusRing} bg-black text-white ${personaColors.border}` : `${focusRing} bg-white text-gray-900 ${personaColors.border}`)
+                : (mode === 'waibi' ? 'focus:ring-gray-500/50 bg-black text-white border-gray-700' : 'focus:ring-gray-500 bg-white text-gray-900 border-gray-300')
+            }`}
             value={model}
             onChange={(e) => setModel(e.target.value)}
           >
@@ -115,7 +128,11 @@ export default function TrainingPreview({ personaCode, personaName }: TrainingPr
       </div>
 
       {/* 消息区 */}
-      <div className={`rounded-lg border p-4 max-h-[400px] overflow-y-auto space-y-3 mb-4 ${mode === 'waibi' ? 'bg-gray-900/50 border-green-500/30' : 'bg-gray-50 border-gray-200'}`}>
+      <div className={`rounded-lg border p-4 max-h-[400px] overflow-y-auto space-y-3 mb-4 ${
+        personaColors
+          ? (mode === 'waibi' ? `bg-gray-900/50 ${personaColors.border}` : `bg-gray-50 ${personaColors.border}`)
+          : (mode === 'waibi' ? 'bg-gray-900/50 border-gray-700' : 'bg-gray-50 border-gray-200')
+      }`}>
         {messages.length === 0 && (
           <div className={`text-center text-sm py-8 ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
             与训练后的 {personaName} 人格开始对话，测试训练效果...
@@ -158,7 +175,7 @@ export default function TrainingPreview({ personaCode, personaName }: TrainingPr
       {/* 输入区 */}
       <form onSubmit={send} className="flex items-center gap-2">
         <input
-          className={`flex-1 rounded-lg border px-3 py-2 text-sm ${inputClass} focus:outline-none focus:ring-2 ${mode === 'waibi' ? 'focus:ring-green-500' : 'focus:ring-[var(--accent-cyan)]'}`}
+          className={`flex-1 rounded-lg border px-3 py-2 text-sm ${inputClass} focus:outline-none focus:ring-2 ${focusRing}`}
           placeholder={`向 ${personaName} 说点什么...`}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -169,12 +186,12 @@ export default function TrainingPreview({ personaCode, personaName }: TrainingPr
           className={`px-4 h-10 rounded-lg text-white ${accentBtn} disabled:opacity-60 disabled:cursor-not-allowed transition flex items-center justify-center`}
           disabled={loading || !input.trim()}
         >
-          {loading ? <FaSpinner className="animate-spin" /> : '发送'}
+          {loading ? '发送中...' : '发送'}
         </button>
       </form>
 
       <div className={`mt-3 text-xs ${mode === 'waibi' ? 'text-gray-400' : 'text-gray-500'}`}>
-        ⚠️ 预览模式：此处的对话不会保存，仅用于测试训练效果
+        预览模式：此处的对话不会保存，仅用于测试训练效果
       </div>
     </div>
   );

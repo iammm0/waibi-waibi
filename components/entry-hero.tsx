@@ -50,10 +50,9 @@ export default function EntryHero() {
     // 根据进度打乱文本
     const text = useMemo(() => (mounted ? scrambleText(baseSentence, progress) : baseSentence), [mounted, baseSentence, progress]);
 
-    // 设置字体为自定义英文字体
     return (
         <section>
-            <p className="text-2xl font-CyberGame">
+            <p className="text-2xl">
                 {text}
             </p>
         </section>

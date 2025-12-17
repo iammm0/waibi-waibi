@@ -10,8 +10,8 @@ export default function Footer() {
             ? "border-white/10 text-white"
             : "border-black/10 text-black";
     const linkClass = mode === "waibi"
-        ? "hover:text-green-400 transition-colors"
-        : "hover:text-[var(--accent-cyan)] transition-colors";
+        ? "hover:text-gray-300 transition-colors"
+        : "hover:text-gray-700 transition-colors";
 
     return (
         <footer className={`border-t px-6 py-6 text-sm transition-colors ${tone}`}>

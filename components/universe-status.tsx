@@ -110,30 +110,22 @@ export default function UniverseStatus({
   const finalMessage = message || statusConfig.message;
   
   const containerClass = mode === 'waibi'
-    ? 'bg-black/90 border border-green-500/30 text-white'
+    ? 'bg-black/90 border border-gray-700 text-white'
     : 'bg-white border border-gray-200 text-gray-900';
   
   const accentClass = mode === 'waibi'
-    ? 'bg-green-500 hover:bg-green-600 text-white'
-    : 'bg-[var(--accent-cyan)] hover:brightness-110 text-white';
+    ? 'bg-gray-600 hover:bg-gray-700 text-white'
+    : 'bg-gray-500 hover:bg-gray-600 text-white';
   
   const secondaryClass = mode === 'waibi'
-    ? 'border border-green-500/30 bg-gray-800/50 hover:bg-gray-800 text-white'
+    ? 'border border-gray-700 bg-gray-800/50 hover:bg-gray-800 text-white'
     : 'border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-900';
 
   if (type === 'loading') {
     return (
       <div className={`flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center p-8 rounded-xl ${containerClass}`}>
         <div className="mb-4">
-          <div className={`text-6xl mb-4 ${mode === 'waibi' ? 'text-green-400' : 'text-[var(--accent-cyan)]'}`}>
-            {context === 'chat' && '📡'}
-            {context === 'persona' && '🧠'}
-            {context === 'letter' && '✉️'}
-            {context === 'profile' && '👤'}
-            {context === 'instance' && '🤖'}
-            {!['chat', 'persona', 'letter', 'profile', 'instance'].includes(context) && '🌌'}
-          </div>
-          <p className={`pixel-text text-lg uppercase tracking-[0.4em] ${mode === 'waibi' ? 'text-green-400' : 'text-[var(--accent-cyan)]'}`}>
+          <p className={`pixel-text text-lg uppercase tracking-[0.4em] ${mode === 'waibi' ? 'text-gray-300' : 'text-gray-700'}`}>
             {finalTitle}
           </p>
         </div>
@@ -145,7 +137,7 @@ export default function UniverseStatus({
             <div
               key={token}
               className={`h-12 animate-pulse rounded-xl ${
-                mode === 'waibi' ? 'bg-green-500/20' : 'bg-gray-200'
+                mode === 'waibi' ? 'bg-emerald-400/20' : 'bg-gray-200'
               }`}
             />
           ))}
@@ -158,14 +150,6 @@ export default function UniverseStatus({
     return (
       <div className={`flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center p-8 rounded-xl ${containerClass}`}>
         <div className="mb-4">
-          <div className={`text-6xl mb-4 ${mode === 'waibi' ? 'text-red-400' : 'text-red-600'}`}>
-            {context === 'chat' && '📡❌'}
-            {context === 'persona' && '🧠❌'}
-            {context === 'letter' && '✉️❌'}
-            {context === 'profile' && '👤❌'}
-            {context === 'instance' && '🤖❌'}
-            {!['chat', 'persona', 'letter', 'profile', 'instance'].includes(context) && '⚠️'}
-          </div>
           <h1 className={`pixel-text text-3xl mb-2 ${mode === 'waibi' ? 'text-red-400' : 'text-red-600'}`}>
             {finalTitle}
           </h1>
@@ -202,14 +186,6 @@ export default function UniverseStatus({
     return (
       <div className={`flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center p-8 rounded-xl ${containerClass}`}>
         <div className="mb-4">
-          <div className={`text-6xl mb-4 ${mode === 'waibi' ? 'text-yellow-400' : 'text-yellow-600'}`}>
-            {context === 'chat' && '💬❓'}
-            {context === 'persona' && '🧠❓'}
-            {context === 'letter' && '✉️❓'}
-            {context === 'profile' && '👤❓'}
-            {context === 'instance' && '🤖❓'}
-            {!['chat', 'persona', 'letter', 'profile', 'instance'].includes(context) && '🌌❓'}
-          </div>
           <h1 className={`pixel-text text-4xl mb-2 ${mode === 'waibi' ? 'text-yellow-400' : 'text-yellow-600'}`}>
             {finalTitle}
           </h1>
