@@ -24,6 +24,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 user = new User({ userId, name: `User-${userId}` });
             }
 
+            if (!Array.isArray(user.trainingData)) {
+                user.trainingData = [];
+            }
+
             // 保存用户的训练数据
             // 保存用户的训练数据
             answers.forEach((answer: { questionId: string; answer: string; }) => {

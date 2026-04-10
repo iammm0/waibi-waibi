@@ -1,22 +1,18 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { createSqliteModel } from '@/lib/sqlite-model';
 
-export interface LetterRead extends Document {
-  userId: string; // 用户ID
-  letterId: string; // 信件ID
-  readAt: Date; // 阅读时间
-  createdAt: Date;
-  updatedAt: Date;
+export interface LetterRead {
+  _id?: string;
+  userId: string;
+  letterId: string;
+  readAt: Date | string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
-const letterReadSchema = new Schema<LetterRead>({
-  userId: { type: String, required: true, index: true },
-  letterId: { type: String, required: true, index: true },
-  readAt: { type: Date, default: Date.now },
-}, { timestamps: true });
+const LetterReadModel = createSqliteModel<LetterRead>('letter_reads', {
+  defaults: () => ({
+    readAt: new Date().toISOString(),
+  }),
+});
 
-// 创建复合索引，确保每个用户对每个信件只有一条记录
-letterReadSchema.index({ userId: 1, letterId: 1 }, { unique: true });
-
-const LetterReadModel = mongoose.models.LetterRead || mongoose.model<LetterRead>('LetterRead', letterReadSchema);
 export default LetterReadModel;
-

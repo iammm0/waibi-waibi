@@ -9,10 +9,10 @@
 
 An MBTI-driven chat and training playground built with Next.js (app router). Users can:
 - Browse 16 MBTI personas, each with a base prompt and user-contributed prompt fragments
-- Chat with any persona (auth required), with per-persona API key selection
+- Chat with any persona (auth required), with one shared LLM API key
 - Train persona behavior by submitting example pairs and adjusting parameters
 
-This repository includes a simple JWT-based auth flow, MongoDB persistence, and a theming system ("waibi" aka dark vs rational aka light).
+This repository includes a simple JWT-based auth flow, SQLite persistence, and a theming system ("waibi" aka dark vs rational aka light).
 
 ## Features
 
@@ -21,8 +21,9 @@ This repository includes a simple JWT-based auth flow, MongoDB persistence, and 
 - Chat with persona (select model client-side): `app/chat/page.tsx` → `components/persona-chat.tsx`
 - Persona prompts loading (file-based + user-contributed): `prompts/*.json` + `/api/persona/[code]/prompt`
 - Auth (register/login/refresh/me) and Bearer token protection
-- MongoDB persistence for user-contributed prompts and per-user chat histories
-- Per-persona LLM API key selection with global fallback
+- SQLite persistence for user-contributed prompts and per-user chat histories
+- Single LLM API key for all personas, with user-scoped chat context separation
+- SBTI new world board integration: `app/sbti/page.tsx`
 - Dual theme system: "waibi" (dark) and "rational" (light)
 
 ## Quick Start
@@ -33,15 +34,13 @@ This repository includes a simple JWT-based auth flow, MongoDB persistence, and 
 npm install
 ```
 
-### 2. Start MongoDB
+### 2. Prepare SQLite
 
-Using Docker Compose (recommended):
+No external database service is required. SQLite runs in-process.
 
 ```bash
-docker compose up -d
+mkdir -p data
 ```
-
-Or use any local MongoDB instance at `mongodb://127.0.0.1:27017/waibi`
 
 ### 3. Configure Environment Variables
 
@@ -63,31 +62,14 @@ Create a `.env.local` file with the following variables:
 # ==== LLM (OpenAI-compatible) ====
 # Global upstream endpoint (shared by all personas)
 LLM_BASE_URL=https://your-openai-compatible.example/v1/chat/completions
-# Global fallback API key (used if persona-specific key is absent)
+# Shared API key used by all personas
 LLM_API_KEY=
 # Global default model (can be overridden from the chat UI)
 LLM_MODEL=gpt-4o
 
-# Persona-specific API keys (optional; take precedence over global)
-LLM_API_KEY_INTJ=
-LLM_API_KEY_INTP=
-LLM_API_KEY_INFJ=
-LLM_API_KEY_INFP=
-LLM_API_KEY_ISTJ=
-LLM_API_KEY_ISFJ=
-LLM_API_KEY_ISTP=
-LLM_API_KEY_ISFP=
-LLM_API_KEY_ENTJ=
-LLM_API_KEY_ENTP=
-LLM_API_KEY_ENFJ=
-LLM_API_KEY_ENFP=
-LLM_API_KEY_ESTJ=
-LLM_API_KEY_ESFJ=
-LLM_API_KEY_ESTP=
-LLM_API_KEY_ESFP=
-
-# ==== MongoDB ====
-MONGODB_URI=mongodb://127.0.0.1:27017/waibi
+# ==== SQLite ====
+# Optional, defaults to ./data/waibi.sqlite
+SQLITE_PATH=./data/waibi.sqlite
 
 # ==== JWT ====
 JWT_SECRET=
@@ -116,7 +98,8 @@ PERSONA_API_ESFP=
 ```
 
 **Notes:**
-- `LLM_BASE_URL` is global; each persona can have its own API key via `LLM_API_KEY_<CODE>`.
+- `LLM_BASE_URL` and `LLM_API_KEY` are global and shared by all personas.
+- Chat context is isolated by user id on the server side.
 - The chat request body may include `model` to override `LLM_MODEL`.
 
 ## Directory Structure
@@ -173,8 +156,8 @@ The header includes a mode toggle; components adapt styles based on `useVibe()` 
 ### Development Tips
 
 - If you modify prompt files under `prompts/`, restart dev server if needed.
-- For persona-specific API keys, add `LLM_API_KEY_<CODE>` in `.env.local` and restart.
-- MongoDB must be reachable before auth or persona endpoints work.
+- Configure `LLM_API_KEY` in `.env.local` and restart.
+- SQLite file location can be changed with `SQLITE_PATH`.
 - Node.js version >= 24.0.0 is required.
 
 ## Deployment
@@ -193,7 +176,7 @@ The Dockerfile uses Next.js standalone output for smaller image size and faster 
 ### Requirements
 
 - Node.js >= 24.0.0
-- MongoDB (local or remote)
+- SQLite (embedded, no external service required)
 - OpenAI-compatible LLM API endpoint
 
 ## License
@@ -207,10 +190,10 @@ MIT
 
 基于 Next.js (app router) 构建的 MBTI 驱动聊天和训练平台。用户可以：
 - 浏览 16 种 MBTI 人格类型，每种都有基础提示词和用户贡献的提示词片段
-- 与任何人格类型聊天（需要认证），支持为每个人格类型选择独立的 API 密钥
+- 与任何人格类型聊天（需要认证），统一使用一个 LLM API 密钥
 - 通过提交示例对话对和调整参数来训练人格行为
 
-本项目包含基于 JWT 的身份验证流程、MongoDB 持久化存储，以及主题系统（"waibi" 暗色主题 vs "rational" 亮色主题）。
+本项目包含基于 JWT 的身份验证流程、SQLite 持久化存储，以及主题系统（"waibi" 暗色主题 vs "rational" 亮色主题）。
 
 ## 功能特性
 
@@ -219,8 +202,9 @@ MIT
 - 与人格聊天（客户端选择模型）：`app/chat/page.tsx` → `components/persona-chat.tsx`
 - 人格提示词加载（基于文件 + 用户贡献）：`prompts/*.json` + `/api/persona/[code]/prompt`
 - 身份验证（注册/登录/刷新/个人信息）和 Bearer token 保护
-- MongoDB 持久化存储用户贡献的提示词和每用户的聊天历史
-- 支持为每个人格类型配置独立的 LLM API 密钥，带全局回退
+- SQLite 持久化存储用户贡献的提示词和每用户的聊天历史
+- 所有人格统一使用一个 LLM API 密钥，并按用户隔离上下文
+- 已接入 SBTI 新世界板块：`app/sbti/page.tsx`
 - 双主题系统："waibi"（暗色）和 "rational"（亮色）
 
 ## 快速开始
@@ -231,15 +215,13 @@ MIT
 npm install
 ```
 
-### 2. 启动 MongoDB
+### 2. 准备 SQLite
 
-使用 Docker Compose（推荐）：
+无需启动外部数据库服务，SQLite 以嵌入式方式运行。
 
 ```bash
-docker compose up -d
+mkdir -p data
 ```
-
-或使用本地 MongoDB 实例，地址为 `mongodb://127.0.0.1:27017/waibi`
 
 ### 3. 配置环境变量
 
@@ -261,31 +243,14 @@ npm run dev
 # ==== LLM (OpenAI 兼容) ====
 # 全局上游端点（所有人格类型共享）
 LLM_BASE_URL=https://your-openai-compatible.example/v1/chat/completions
-# 全局回退 API 密钥（当人格特定密钥不存在时使用）
+# 全局共享 API 密钥（所有人格类型共用）
 LLM_API_KEY=
 # 全局默认模型（可在聊天 UI 中覆盖）
 LLM_MODEL=gpt-4o
 
-# 人格特定 API 密钥（可选；优先级高于全局密钥）
-LLM_API_KEY_INTJ=
-LLM_API_KEY_INTP=
-LLM_API_KEY_INFJ=
-LLM_API_KEY_INFP=
-LLM_API_KEY_ISTJ=
-LLM_API_KEY_ISFJ=
-LLM_API_KEY_ISTP=
-LLM_API_KEY_ISFP=
-LLM_API_KEY_ENTJ=
-LLM_API_KEY_ENTP=
-LLM_API_KEY_ENFJ=
-LLM_API_KEY_ENFP=
-LLM_API_KEY_ESTJ=
-LLM_API_KEY_ESFJ=
-LLM_API_KEY_ESTP=
-LLM_API_KEY_ESFP=
-
-# ==== MongoDB ====
-MONGODB_URI=mongodb://127.0.0.1:27017/waibi
+# ==== SQLite ====
+# 可选，默认值为 ./data/waibi.sqlite
+SQLITE_PATH=./data/waibi.sqlite
 
 # ==== JWT ====
 JWT_SECRET=
@@ -314,7 +279,8 @@ PERSONA_API_ESFP=
 ```
 
 **注意事项：**
-- `LLM_BASE_URL` 是全局的；每个人格类型可以通过 `LLM_API_KEY_<CODE>` 拥有自己的 API 密钥。
+- `LLM_BASE_URL` 和 `LLM_API_KEY` 是全局共享配置。
+- 服务端会按用户 id 隔离聊天上下文。
 - 聊天请求体可以包含 `model` 字段来覆盖 `LLM_MODEL`。
 
 ## 目录结构
@@ -371,8 +337,8 @@ PERSONA_API_ESFP=
 ### 开发提示
 
 - 如果修改 `prompts/` 目录下的提示词文件，可能需要重启开发服务器。
-- 要为特定人格配置 API 密钥，在 `.env.local` 中添加 `LLM_API_KEY_<CODE>` 并重启。
-- 在身份验证或人格端点工作之前，MongoDB 必须可访问。
+- 在 `.env.local` 中配置 `LLM_API_KEY` 后重启服务。
+- 可通过 `SQLITE_PATH` 自定义 SQLite 文件位置。
 - 需要 Node.js 版本 >= 24.0.0。
 
 ## 部署
@@ -391,7 +357,7 @@ Dockerfile 使用 Next.js standalone 输出，以获得更小的镜像体积和�
 ### 系统要求
 
 - Node.js >= 24.0.0
-- MongoDB（本地或远程）
+- SQLite（嵌入式，无需外部服务）
 - OpenAI 兼容的 LLM API 端点
 
 ## 许可证

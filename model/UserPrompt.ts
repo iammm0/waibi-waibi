@@ -1,18 +1,15 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { createSqliteModel } from '@/lib/sqlite-model';
 
-export interface UserPrompt extends Document {
+export interface UserPrompt {
+  _id?: string;
   userId: string;
-  personaCode: string; // e.g., intj
+  personaCode: string;
   text: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
-const userPromptSchema = new Schema<UserPrompt>({
-  userId: { type: String, index: true, required: true },
-  personaCode: { type: String, index: true, required: true },
-  text: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
+const UserPromptModel = createSqliteModel<UserPrompt>('user_prompts', {
+  defaults: () => ({}),
 });
 
-const UserPromptModel = mongoose.models.UserPrompt || mongoose.model<UserPrompt>('UserPrompt', userPromptSchema);
 export default UserPromptModel;

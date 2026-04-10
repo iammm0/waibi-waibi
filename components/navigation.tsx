@@ -9,6 +9,7 @@ import { MdDarkMode, MdLightMode } from "react-icons/md";
 const navItems = [
   { href: "/", label: "训练" },
   { href: "/instances", label: "开放实例" },
+  { href: "/sbti", label: "新世界" },
   { href: "/chat", label: "聊一聊" },
 ];
 

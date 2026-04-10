@@ -1,30 +1,24 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import { createSqliteModel } from '@/lib/sqlite-model';
 
 export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
-export interface Interaction extends Document {
+export interface Interaction {
+  _id?: string;
   userId: string;
-  personaCode: string; // e.g., intj, enfp
+  personaCode: string;
   messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
-const messageSchema = new Schema<Message>({
-  role: { type: String, enum: ['system', 'user', 'assistant'], required: true },
-  content: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-}, { _id: false });
+const InteractionModel = createSqliteModel<Interaction>('interactions', {
+  defaults: () => ({
+    messages: [],
+  }),
+});
 
-const interactionSchema = new Schema<Interaction>({
-  userId: { type: String, index: true, required: true },
-  personaCode: { type: String, index: true, required: true },
-  messages: { type: [messageSchema], default: [] },
-}, { timestamps: true });
-
-const InteractionModel = mongoose.models.Interaction || mongoose.model<Interaction>('Interaction', interactionSchema);
 export default InteractionModel;

@@ -15,5 +15,5 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ code: 
     return NextResponse.json({ base, contributed: [], api });
   }
   const contributed = await UserPrompt.find({ personaCode: code }).sort({ createdAt: 1 }).lean();
-  return NextResponse.json({ base, contributed: contributed.map(c => c.text), api });
+  return NextResponse.json({ base, contributed: contributed.map((c: any) => c.text), api });
 }

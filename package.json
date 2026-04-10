@@ -19,7 +19,6 @@
     "body-parser": "^2.2.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.2",
     "next": "^15.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

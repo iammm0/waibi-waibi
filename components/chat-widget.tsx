@@ -131,6 +131,15 @@ type Msg = { role: "user" | "assistant" | "system"; content: string };
 
 export default function ChatWidget() {
     const { mode } = useVibe();
+    const contextId = useMemo(() => {
+        if (typeof window === "undefined") return "";
+        const KEY = "waibi_public_chat_context_id";
+        const existing = localStorage.getItem(KEY);
+        if (existing) return existing;
+        const generated = `ctx_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem(KEY, generated);
+        return generated;
+    }, []);
     const [messages, setMessages] = useState<Msg[]>([
         { role: "system", content: "你已连接到 Waibi 的模型中转。可以返回纯文本，或返回 JSON：{title, subtitle, bullets, links}。" },
     ]);
@@ -158,7 +167,10 @@ export default function ChatWidget() {
             const res = await fetch("/api/llm", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ messages: next.filter((m) => m.role !== "system") }),
+                body: JSON.stringify({
+                    messages: next.filter((m) => m.role !== "system"),
+                    contextId,
+                }),
             });
 
             if (!res.ok) {
